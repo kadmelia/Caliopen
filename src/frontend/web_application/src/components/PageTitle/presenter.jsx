@@ -1,10 +1,10 @@
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import DocumentTitle from 'react-document-title';
 
 const DEFAULT_DOCUMENT_TITLE = 'Caliopen, be good!';
 
-class PageTitle extends Component {
+class PageTitle extends PureComponent {
 
   static propTypes = {
     user: PropTypes.shape({}),

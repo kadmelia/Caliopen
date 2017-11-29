@@ -8,6 +8,8 @@ const { CommonsChunkPlugin } = require('webpack').optimize;
 // const StyleLintPlugin = require('stylelint-webpack-plugin');
 const clientOptions = require('../config/client.default.js');
 
+const workspacesRootDirectory = path.resolve(__dirname, '../../../../');
+
 const configureStylesheet = (filename = 'client_[name]', relativePath = '') => {
   const extractTextPlugin = new ExtractTextPlugin({
     filename: relativePath + filename,
@@ -44,9 +46,9 @@ const configureStylesheet = (filename = 'client_[name]', relativePath = '') => {
                   sourceMap: false,
                   includePaths: [
                     path.resolve(__dirname, '../src'),
-                    path.resolve(__dirname, '../node_modules/foundation-sites/scss'),
-                    path.resolve(__dirname, '../node_modules/font-awesome/scss'),
-                    path.resolve(__dirname, '../node_modules/react-redux-notify/src'),
+                    path.resolve(workspacesRootDirectory, 'node_modules/foundation-sites/scss'),
+                    path.resolve(workspacesRootDirectory, 'node_modules/font-awesome/scss'),
+                    path.resolve(workspacesRootDirectory, 'node_modules/react-redux-notify/src'),
                   ],
                 },
               },

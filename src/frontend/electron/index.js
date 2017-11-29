@@ -1,3 +1,5 @@
+const url = require('url');
+const path = require('path');
 const { app, BrowserWindow, ipcMain } = require('electron');
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -13,7 +15,11 @@ function createWindow() {
   win = new BrowserWindow({ width: 1024, height: 800 });
 
   // and load the index.html of the app.
-  win.loadURL(`file://${process.cwd()}/dist/electron/index.html`);
+  win.loadURL(url.format({
+    pathname: path.join(__dirname, 'dist/electron/index.html'),
+    protocol: 'file',
+    slashes: true,
+  }));
 
   win.webContents.on('did-finish-load', () => {
     win.show();

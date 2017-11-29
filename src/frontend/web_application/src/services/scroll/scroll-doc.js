@@ -46,4 +46,5 @@ const detectScrollElem = () => {
   return doc.scrollingElement || doc.body;
 };
 
+// eslint-disable-next-line no-return-assign
 export default () => scrollElem || (scrollElem = detectScrollElem());

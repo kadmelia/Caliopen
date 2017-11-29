@@ -3,7 +3,7 @@
 # Author: Caliopen
 # Date: 2016-01-05
 
-FROM node:6
+FROM node:8
 MAINTAINER Caliopen
 
 ADD . /srv/caliopen/frontend/

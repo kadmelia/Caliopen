@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Moment from 'react-moment';
 import classnames from 'classnames';
@@ -8,7 +8,7 @@ import ContactAvatarLetter from '../../../../components/ContactAvatarLetter';
 
 import './style.scss';
 
-class ProfileInfo extends Component {
+class ProfileInfo extends PureComponent {
   static propTypes = {
     user: PropTypes.shape({}),
     className: PropTypes.string,

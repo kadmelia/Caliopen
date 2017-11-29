@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "workspaces": [
+    "devtools/storybook",
+    "src/frontend/web_application",
+    "src/frontend/electron"
+  ]
+}

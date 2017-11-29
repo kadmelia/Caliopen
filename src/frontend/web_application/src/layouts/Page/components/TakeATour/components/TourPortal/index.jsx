@@ -103,7 +103,7 @@ class TourPortal extends TourPortalBase {
           <div
             role="button"
             tabIndex={-1}
-            ref={c => (this.mask = c)}
+            ref={(c) => { this.mask = c; }}
             onClick={this.maskClickHandler}
             className={cn(CN.mask.base, {
               [CN.mask.isOpen]: isOpen,
@@ -149,7 +149,7 @@ class TourPortal extends TourPortalBase {
             />
           )}
           <Guide
-            innerRef={c => (this.helper = c)}
+            innerRef={(c) => { this.helper = c; }}
             targetHeight={targetHeight}
             targetWidth={targetWidth}
             targetTop={targetTop}

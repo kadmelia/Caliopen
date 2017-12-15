@@ -11,7 +11,7 @@
     "build:watch": "NODE_ENV=development webpack --watch --config ./webpack.config.js"
   },
   "dependencies": {
-    "@caliopen/frontend": "*",
+    "@caliopen/frontend": "../web_application",
     "foundation-sites": "~6.3.0"
   },
   "devDependencies": {

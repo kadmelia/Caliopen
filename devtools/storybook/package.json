@@ -8,7 +8,7 @@
     "build": "build-storybook -o dist/storybook"
   },
   "dependencies": {
-    "@caliopen/frontend": "*",
+    "@caliopen/frontend": "../../src/frontend/web_application",
     "@kadira/react-storybook-addon-info": "^3.4.0",
     "@kadira/storybook": "^2.21.0",
     "@kadira/storybook-addon-knobs": "^1.7.1",

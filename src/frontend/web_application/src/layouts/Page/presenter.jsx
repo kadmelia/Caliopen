@@ -8,6 +8,10 @@ import NotificationCenter from './components/NotificationCenter';
 import CallToAction from './components/CallToAction';
 import './style.scss';
 
+const BACKGROUND_URLS = {
+  secure: '/img/caliopen_bg_secure.jpg',
+};
+
 class PageContainer extends Component {
   static propTypes = {
     children: PropTypes.node.isRequired,
@@ -21,10 +25,16 @@ class PageContainer extends Component {
 
   render() {
     const { children, i18n } = this.props;
+    const fakeContext = 'secure';
+    const backgroundStyle = {
+      style: {
+        backgroundImage: `url(${BACKGROUND_URLS[fakeContext]})`,
+      },
+    };
 
     return (
       <OffCanvas leftChildren={<NavigationAlt />}>
-        <div className="l-body">
+        <div className="l-body" {...backgroundStyle}>
           <Header />
           <Navigation />
           <section role="main">

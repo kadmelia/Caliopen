@@ -2,8 +2,6 @@
 @import '../../styles/vendor/bootstrap_foundation-sites';
 
 .l-contact-book {
-  background: $co-color__bg__back;
-
   &__contacts {
     @include flex-grid-row($size: expand);
   }

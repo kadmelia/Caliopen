@@ -8,10 +8,16 @@ $co-font-path: '../../fonts';
 @import '../../styles/common';
 
 $navigation__height: $co-component__height;
-$navigation__padding: .75rem;
-$navigation-after__height: $co-component__spacing;
+$navigation__padding: 6rem;
 
 .l-body {
+  min-height: 100vh;
+  background-attachment: fixed;
+  background-color: $co-color__bg__back;
+  background-repeat: no-repeat;
+  background-position: 50% 0;
+  // background-size: 100%;
+
   &__content {
     max-width: $co-site-width;
     margin-right: auto;
@@ -28,7 +34,7 @@ $navigation-after__height: $co-component__spacing;
 
   @include breakpoint(medium) {
     &__content {
-      padding-top: ($navigation__height + $navigation__padding + $navigation-after__height);
+      padding-top: ($navigation__height + $navigation__padding);
     }
   }
 }

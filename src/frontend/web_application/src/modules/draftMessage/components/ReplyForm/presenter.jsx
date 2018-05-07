@@ -77,6 +77,8 @@ class ReplyForm extends Component {
     });
   };
 
+  handleCopyTo = () => {}
+
   handleActiveClick = () => {
     this.setState(prevState => ({
       isActive: !prevState.isActive,
@@ -174,7 +176,7 @@ class ReplyForm extends Component {
             >
               <Trans id="messages.compose.action.save">Save</Trans>
             </Button>
-            <Button className="m-reply__bottom-action" onClick={this.handleSave} icon="share-alt" responsive="icon-only">
+            <Button className="m-reply__bottom-action" onClick={this.handleCopyTo} icon="share-alt" responsive="icon-only" >
               <Trans id="messages.compose.action.copy">Copy to</Trans>
             </Button>
             {/* TODO: enable rich text editor

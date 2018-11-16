@@ -51,52 +51,10 @@
 			"revisionTime": "2018-06-08T13:49:19Z"
 		},
 		{
-			"checksumSHA1": "/Y+nibvtN7yeCtsvyGLerVkBKTE=",
-			"path": "github.com/dghubble/gologin",
-			"revision": "973745917bf3daec63ac76104a1de3e5ddccd0f3",
-			"revisionTime": "2018-07-29T20:19:44Z"
-		},
-		{
-			"checksumSHA1": "yhiM1rwT7gL9Q9Ek5eCwdoXtE+4=",
-			"path": "github.com/dghubble/gologin/google",
-			"revision": "973745917bf3daec63ac76104a1de3e5ddccd0f3",
-			"revisionTime": "2018-07-29T20:19:44Z"
-		},
-		{
-			"checksumSHA1": "d5dgKZB4NKDuUG3g3E5bMef0XCQ=",
-			"path": "github.com/dghubble/gologin/internal",
-			"revision": "973745917bf3daec63ac76104a1de3e5ddccd0f3",
-			"revisionTime": "2018-07-29T20:19:44Z"
-		},
-		{
-			"checksumSHA1": "xAwIVo+LQZhEnixaInuQgDIdAzc=",
-			"path": "github.com/dghubble/gologin/oauth1",
-			"revision": "973745917bf3daec63ac76104a1de3e5ddccd0f3",
-			"revisionTime": "2018-07-29T20:19:44Z"
-		},
-		{
-			"checksumSHA1": "GWCNtcJdFWGqpJMGgmmWcKAg/qU=",
-			"path": "github.com/dghubble/gologin/oauth2",
-			"revision": "973745917bf3daec63ac76104a1de3e5ddccd0f3",
-			"revisionTime": "2018-07-29T20:19:44Z"
-		},
-		{
-			"checksumSHA1": "xf0cVBnZvxm0PacnTXtGCVkCrok=",
-			"path": "github.com/dghubble/gologin/twitter",
-			"revision": "973745917bf3daec63ac76104a1de3e5ddccd0f3",
-			"revisionTime": "2018-07-29T20:19:44Z"
-		},
-		{
 			"checksumSHA1": "zSAENn9MzTCRqsEb4QXDZglhIbE=",
 			"path": "github.com/dghubble/oauth1",
 			"revision": "64b54f3b6f0b30d0ae18ca9f33c419203999aa9c",
 			"revisionTime": "2018-10-13T18:28:54Z"
-		},
-		{
-			"checksumSHA1": "zSAENn9MzTCRqsEb4QXDZglhIbE=",
-			"path": "github.com/dghubble/oauth1",
-			"revision": "c0a405baf29f5ed2616bc1ef6b778532c960aa5b",
-			"revisionTime": "2018-05-22T04:49:49Z"
 		},
 		{
 			"checksumSHA1": "3mj2/UJNPtEiVVw5TN+sTFi088c=",
@@ -1071,14 +1029,8 @@
 		{
 			"checksumSHA1": "huVltYnXdRFDJLgp/ZP9IALzG7g=",
 			"path": "golang.org/x/oauth2/jws",
-			"revision": "c57b0facaced709681d9f90397429b9430a74754",
-			"revisionTime": "2018-10-03T18:30:08Z"
-		},
-		{
-			"checksumSHA1": "QPndO4ODVdEBILRhJ6869UDAoHc=",
-			"path": "golang.org/x/oauth2/jwt",
-			"revision": "c57b0facaced709681d9f90397429b9430a74754",
-			"revisionTime": "2018-10-03T18:30:08Z"
+			"revision": "f42d05182288abf10faef86d16c0d07b8d40ea2d",
+			"revisionTime": "2018-09-10T22:10:05Z"
 		},
 		{
 			"checksumSHA1": "REkmyB368pIiip76LiqMLspgCRk=",

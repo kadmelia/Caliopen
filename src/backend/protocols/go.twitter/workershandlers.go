@@ -67,7 +67,7 @@ func (w *Worker) getOrCreateWorker(userId, remoteId string) *AccountWorker {
 	if accountWorker, ok := w.AccountWorkers[userId+remoteId]; ok {
 		return accountWorker
 	} else {
-		log.Warnf("[getOrCreateWorker] failed to retrieve registered worker for remote %s (user %s). Trying to add one.", remoteId, userId)
+		log.Infof("[getOrCreateWorker] failed to retrieve registered worker for remote %s (user %s). Trying to add one.", remoteId, userId)
 		if userId == "" || remoteId == "" {
 			return nil
 		}

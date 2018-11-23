@@ -11,7 +11,6 @@ import (
 	broker "github.com/CaliOpen/Caliopen/src/backend/brokers/go.twitter"
 	. "github.com/CaliOpen/Caliopen/src/backend/defs/go-objects"
 	"github.com/CaliOpen/go-twitter/twitter"
-	"github.com/Sirupsen/logrus"
 	log "github.com/Sirupsen/logrus"
 	"github.com/dghubble/oauth1"
 	"sort"
@@ -54,8 +53,6 @@ const (
 	errorsCountKey    = "errorsCount"
 )
 
-
-
 // NewWorker create a worker dedicated to a specific twitter account.
 // A worker holds remote identity credentials and data, as well as user context connection to twitter API.
 func NewAccountWorker(userID, remoteID string, conf WorkerConfig) (accountWorker *AccountWorker, err error) {
@@ -87,6 +84,8 @@ func NewAccountWorker(userID, remoteID string, conf WorkerConfig) (accountWorker
 	}
 	if lastseen, ok := remote.Infos[lastSeenInfosKey]; ok {
 		accountWorker.lastDMseen = lastseen
+	} else {
+		accountWorker.lastDMseen = "0"
 	}
 
 	authConf := oauth1.NewConfig(conf.TwitterAppKey, conf.TwitterAppSecret)
@@ -101,9 +100,7 @@ func NewAccountWorker(userID, remoteID string, conf WorkerConfig) (accountWorker
 	return
 }
 
-
-
-// Start begins infinite loop, until receiving stop order. This func must be call within goroutine.
+// Start begins infinite loops, until receiving stop order. This func must be call within goroutine.
 func (worker *AccountWorker) Start() {
 	go func(w *AccountWorker) {
 		for {
@@ -142,7 +139,7 @@ deskLoop:
 			worker.Stop()
 			break deskLoop
 		default:
-			logrus.Warnf("worker received unknown command number %d", command)
+			log.Warnf("worker received unknown command number %d", command)
 		}
 	}
 }
@@ -150,6 +147,7 @@ deskLoop:
 func (worker *AccountWorker) Stop() {
 	// destroy broker
 	worker.broker.ShutDown()
+	worker.broker = nil
 	// close desk
 	if _, ok := <-worker.WorkerDesk; ok {
 		close(worker.WorkerDesk)
@@ -158,7 +156,7 @@ func (worker *AccountWorker) Stop() {
 
 // PollDM calls Twitter API endpoint to fetch DM for worker
 func (worker *AccountWorker) PollDM() {
-	DMs, _, err := worker.twitterClient.DirectMessages.EventsList(&twitter.DirectMessageEventsListParams{Count: 10})
+	DMs, _, err := worker.twitterClient.DirectMessages.EventsList(&twitter.DirectMessageEventsListParams{Count: 50})
 	if err == nil {
 		accountInfos, retrieveErr := worker.broker.Store.RetrieveRemoteInfosMap(worker.userAccount.userID.String(), worker.userAccount.remoteID.String())
 		if retrieveErr == nil {
@@ -168,7 +166,7 @@ func (worker *AccountWorker) PollDM() {
 				for _, err := range e.Errors {
 					if err.Code == 88 {
 						rateLimitError = true
-						log.Infof("twitter returned rate limit error, slowing down worker for account @%s", worker.userAccount.screenName)
+						log.Infof("[AccountWorker %s] PollDM : twitter returned rate limit error, slowing down worker for account", worker.userAccount.remoteID)
 						if pollInterval, ok := accountInfos["pollinterval"]; ok {
 							interval, e := strconv.Atoi(pollInterval)
 							if e == nil {
@@ -188,57 +186,53 @@ func (worker *AccountWorker) PollDM() {
 								}
 							}
 						}
-						break
+						return
 					} else {
 						errorsMessages.WriteString(err.Message + " ")
 					}
 				}
 				if !rateLimitError {
 					accountInfos[lastErrorKey] = errorsMessages.String()
-					worker.broker.Store.UpdateRemoteInfosMap(worker.userAccount.userID.String(), worker.userAccount.remoteID.String(), accountInfos)
+					e := worker.broker.Store.UpdateRemoteInfosMap(worker.userAccount.userID.String(), worker.userAccount.remoteID.String(), accountInfos)
+					if e != nil {
+						log.WithError(e).Warnf("[AccountWorker %s] PollDM failed to update sync state in db", worker.userAccount.remoteID.String())
+					}
+					return
 				}
 			}
 		} else {
-			logrus.WithError(retrieveErr).Warnf("[TwitterWorker] PollDM failed to retrieve infos map for account @%s (remote %s, user %s)", worker.userAccount.screenName, worker.userAccount.remoteID.String(), worker.userAccount.userID.String())
+			log.WithError(retrieveErr).Warnf("[AccountWorker %s] PollDM failed to retrieve infos map", worker.userAccount.remoteID.String())
+			return
 		}
 	} else {
-		logrus.WithError(err).Warnf("[TwitterWorker] PollDM failed for account @%s (remote %s, user %s)", worker.userAccount.screenName, worker.userAccount.remoteID.String(), worker.userAccount.userID.String())
+		log.WithError(err).Warnf("[AccountWorker %s] PollDM failed", worker.userAccount.remoteID.String())
 		return
 	}
 
 	sort.Sort(ByAscID(DMs.Events)) // reverse events order to get older DMs first
+
 	if len(DMs.Events) > 0 && worker.dmNotSeen(DMs.Events[0]) {
 		//TODO: handle pagination with `cursor` param
 	}
 
+	log.Infof("[AccountWorker %s] PollDM %d events retrieved", worker.userAccount.remoteID.String(), len(DMs.Events))
 	for _, event := range DMs.Events {
 		if worker.dmNotSeen(event) {
-			//lookup sender's screen_name because it's not embedded in event object
-			var senderName string
-			var inCache bool
-			senderID, err := strconv.ParseInt(event.Message.SenderID, 10, 64)
-			if err == nil {
-				if senderName, inCache = worker.usersScreenNames[senderID]; !inCache {
-					users, _, err := worker.twitterClient.Users.Lookup(&twitter.UserLookupParams{UserID: []int64{senderID}})
-					if err == nil && len(users) > 0 {
-						senderName = users[0].ScreenName
-						worker.usersScreenNames[senderID] = senderName
-					}
-				}
-			}
-			event.Message.SenderScreenName = senderName
-			event.Message.Target.RecipientScreenName = worker.userAccount.screenName
 			//TODO: handle DM sent by user : remove or not ?
+
+			//lookup sender & recipient's screen_names because there are not embedded in event object
+			(*event.Message).SenderScreenName = worker.getAccountName(event.Message.SenderID)
+			(*event.Message).Target.RecipientScreenName = worker.getAccountName(event.Message.Target.RecipientID)
 			err = worker.broker.ProcessInDM(worker.userAccount.userID, worker.userAccount.remoteID, &event, true)
 			if err != nil {
-				// something went wrong, forget this DM id
-				logrus.WithError(err).Warnf("[TwitterWorker] ProcessInDM failed for event : %+v", event)
+				// something went wrong, forget this DM
+				log.WithError(err).Warnf("[AccountWorker %s] ProcessInDM failed for event : %+v", worker.userAccount.remoteID.String(), event)
 				continue
 			}
 			worker.lastDMseen = event.ID
 		}
 	}
-	//TODO: write lastsync & last_check to remote identity in db at last
+	log.Infof("[AccountWorker %s] PollDM finished", worker.userAccount.remoteID.String())
 }
 
 func (worker *AccountWorker) dmNotSeen(event twitter.DirectMessageEvent) bool {
@@ -300,6 +294,25 @@ func (worker *AccountWorker) SendDM(order BrokerOrder) error {
 	case <-time.After(10 * time.Second):
 		return errors.New("[SendDM] broker timeout")
 	}
+}
+
+// getAccountName returns Twitter account screen name given a Twitter account ID
+// screen name is retrieve either from worker's cache or Twitter API
+// returns empty string if it fails.
+func (worker *AccountWorker) getAccountName(accountID string) (accountName string) {
+	ID, err := strconv.ParseInt(accountID, 10, 64)
+	if err == nil {
+		var inCache bool
+		if accountName, inCache = worker.usersScreenNames[ID]; !inCache {
+			users, _, err := worker.twitterClient.Users.Lookup(&twitter.UserLookupParams{UserID: []int64{ID}})
+			if err == nil && len(users) > 0 {
+				accountName = users[0].ScreenName
+				(*worker).usersScreenNames[ID] = accountName
+			}
+		}
+		return accountName
+	}
+	return
 }
 
 // sort interface

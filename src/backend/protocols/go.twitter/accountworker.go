@@ -154,7 +154,8 @@ func (worker *AccountWorker) Stop() {
 	}
 }
 
-// PollDM calls Twitter API endpoint to fetch DM for worker
+// PollDM calls Twitter API endpoint to fetch DMs
+// it passes unseen DM to its embedded broker
 func (worker *AccountWorker) PollDM() {
 	DMs, _, err := worker.twitterClient.DirectMessages.EventsList(&twitter.DirectMessageEventsListParams{Count: 50})
 	if err == nil {

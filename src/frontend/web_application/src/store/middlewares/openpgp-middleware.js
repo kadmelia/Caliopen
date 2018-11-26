@@ -2,12 +2,12 @@ import * as module from '../modules/openpgp-keychain';
 import getPGPManager from '../../services/openpgp-manager';
 import * as openPGPKeychainRepository from '../../services/openpgp-keychain-repository';
 
-export default store => next => (action) => {
+export default store => next => async (action) => {
   const result = next(action);
 
   if (action.type === module.FETCH_ALL) {
     store.dispatch(module.receiveAll({
-      keychainByFingerprint: openPGPKeychainRepository.getPrimaryKeysByFingerprint(),
+      keychainByFingerprint: await openPGPKeychainRepository.getPrimaryKeysByFingerprint(),
     }));
   }
 

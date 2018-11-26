@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Trans, withI18n } from '@lingui/react';
 import classnames from 'classnames';
-import { Spinner, Button, FieldErrors, CheckboxFieldGroup, SelectFieldGroup, TextFieldGroup, TextareaFieldGroup } from '../../../../components/';
+import { Spinner, Button, /* FieldErrors, */ CheckboxFieldGroup, SelectFieldGroup, TextFieldGroup, TextareaFieldGroup } from '../../../../components/';
 
 import {
   ERROR_UNABLE_READ_PUBLIC_KEY,
@@ -13,40 +13,6 @@ import './style.scss';
 
 const FORM_TYPE_GENERATE = 'generate';
 const FORM_TYPE_RAW = 'raw';
-
-
-// class OpenPGPKeyFormController {
-//   $onInit() {
-//     this.generateForm = { ...this.generateForm };
-//     this.importForm = {};
-//     this.formType = 'generate';
-//   }
-//
-// $onChanges(changes) {
-//   if (changes.emails && !!this.emails) {
-//     this.emailOptions = this.emails.map(email => email.address);
-//     if (this.emailOptions.length === 1) {
-//       this.generateForm = { ...this.generateForm, email: this.emailOptions[0] };
-//     }
-//   }
-// }
-//
-// handleImportChanges(property, $event) {
-//   this.importForm = { ...this.importForm, [property]: $event.model };
-// }
-//
-// handleGenerateChanges(property, $event) {
-//   this.generateForm = { ...this.generateForm, [property]: $event.model };
-// }
-//
-// generate() {
-//   this.onGenerate({ $event: this.generateForm });
-// }
-//
-//   import() {
-//     this.onImport({ $event: this.importForm });
-//   }
-// }
 
 @withI18n()
 class OpenPGPKeyForm extends Component {
@@ -162,7 +128,7 @@ class OpenPGPKeyForm extends Component {
     // XXX: note on importForm, errors comes from props and form items from this.state since form is
     // not real time saved in redux store
     const {
-      i18n, isLoading, className, importForm, children,
+      i18n, isLoading, className, children,
     } = this.props;
     const generateHollowProp = this.state.formType === FORM_TYPE_GENERATE ? { shape: 'hollow' } : {};
     const rawHollowProp = this.state.formType === FORM_TYPE_RAW ? { shape: 'hollow' } : {};
@@ -249,14 +215,14 @@ class OpenPGPKeyForm extends Component {
         )}
         {this.state.formType === FORM_TYPE_RAW && (
           <form onSubmit={this.handleImportSubmit}>
-            {
+            {/*
               importForm.errors.global && (
                 <FieldErrors
                   className="m-account-openpgp-form__field-group"
                   errors={importForm.errors.global.map(key => this.errorsLabels[key])}
                 />
               )
-            }
+              */}
             <TextareaFieldGroup
               className="m-account-openpgp-form__field-group"
               label={i18n._('user.openpgp.form.public-key.label', null, { defaults: 'Public key' })}
@@ -265,11 +231,13 @@ class OpenPGPKeyForm extends Component {
                 onChange: this.handleImportChanges,
                 name: 'publicKeyArmored',
               }}
-              errors={
-                importForm.errors.publicKeyArmored &&
-                  importForm.errors.publicKeyArmored.map(key => this.errorsLabels[key])
-              }
             />
+            {/* errors={
+                  importForm.errors.publicKeyArmored &&
+                  importForm.errors.publicKeyArmored.map(key => this.errorsLabels[key])
+                }
+                */
+              }
             <TextareaFieldGroup
               className="m-account-openpgp-form__field-group"
               label={i18n._('user.openpgp.form.private-key.label', null, { defaults: 'Private key' })}
@@ -278,11 +246,13 @@ class OpenPGPKeyForm extends Component {
                 onChange: this.handleImportChanges,
                 name: 'privateKeyArmored',
               }}
+            />
+            {/*
               errors={
                 importForm.errors.privateKeyArmored &&
-                  importForm.errors.privateKeyArmored.map(key => this.errorsLabels[key])
+                importForm.errors.privateKeyArmored.map(key => this.errorsLabels[key])
               }
-            />
+              */}
             <Button
               className="m-account-openpgp-form__field-group"
               type="submit"

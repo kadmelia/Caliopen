@@ -39,6 +39,7 @@ module.exports = {
             loader: 'eslint-loader',
             options: {
               cache: true,
+              options: { name: 'WorkerName.[hash].js' },
               failOnError: false,
             },
           },

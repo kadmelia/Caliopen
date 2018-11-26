@@ -1,34 +1,52 @@
-import { getLocalstorage } from '../localStorage';
+import { Keyring } from 'openpgp';
 
-const NAMESPACE = 'openpgp';
+export const [PUBLIC_KEY, PRIVATE_KEY] = ['public', 'private'];
 
-export function getPrimaryKeysByFingerprint() {
-  const ls = getLocalstorage();
+const keyring = new Keyring();
 
-  return ls.findAll(NAMESPACE)
-    .reduce((prev, { id, value }) => {
-      const fingerprint = id.replace('publicKeyArmored.', '')
-        .replace('privateKeyArmored.', '');
-      const keyType = id.replace(`.${fingerprint}`, '');
+export async function getPrimaryKeysByFingerprint() {
+  await keyring.load();
 
-      return {
-        ...prev,
-        [fingerprint]: {
-          ...prev[fingerprint],
-          [keyType]: value,
-        },
-      };
-    }, {});
+  return keyring.getAllKeys().reduce((acc, key) => {
+    const { fingerprint } = key;
+    const keyType = key.isPublic() ? 'publicKeyArmored' : 'privateKeyArmored';
+
+    return {
+      ...acc,
+      [fingerprint]: {
+        ...acc[fingerprint],
+        [keyType]: key,
+      },
+    };
+  }, {});
 }
 
-export function saveKey(fingerprint, publicKeyArmored, privateKeyArmored) {
-  const ls = getLocalstorage();
-  ls.save(NAMESPACE, `publicKeyArmored.${fingerprint}`, publicKeyArmored);
-  ls.save(NAMESPACE, `privateKeyArmored.${fingerprint}`, privateKeyArmored);
+export async function getKeysForEmail(email, keyType = PUBLIC_KEY) {
+  await keyring.load();
+
+  if (keyType === PUBLIC_KEY) {
+    return keyring.publicKeys.getForAddress(email);
+  }
+
+  if (keyType === PRIVATE_KEY) {
+    return keyring.privateKeys.getForAddress(email);
+  }
+
+  throw new Error('keyType must be either PUBLIC_KEY or PRIVATE_KEY');
 }
 
-export function deleteKey(fingerprint) {
-  const ls = getLocalstorage();
-  ls.remove(NAMESPACE, `publicKeyArmored.${fingerprint}`);
-  ls.remove(NAMESPACE, `privateKeyArmored.${fingerprint}`);
+export async function saveKey(publicKeyArmored, privateKeyArmored) {
+  keyring.publicKeys.importKey(publicKeyArmored);
+  keyring.privateKeys.importKey(privateKeyArmored);
+
+  const error = await keyring.store();
+
+  return error;
+}
+
+export async function deleteKey(fingerprint) {
+  keyring.removeKeysForId(fingerprint);
+  const error = await keyring.store();
+
+  return error;
 }

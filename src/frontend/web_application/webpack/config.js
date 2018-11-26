@@ -108,6 +108,7 @@ const configureVendorSplit = () => ({
       'lodash.isequal',
       'lodash.throttle',
       'moment-timezone',
+      'openpgp',
       'prop-types',
       'rc-slider',
       'react',

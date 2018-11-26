@@ -15,7 +15,7 @@ import { userSelector } from '../../../../modules/user';
 import { getLastMessage } from '../../../../services/message';
 import { withDraftMessage } from './withDraftMessage';
 import { filterIdentities } from '../../services/filterIdentities';
-
+// import { encryptDraft } from '../../services/encryption';
 import Presenter from './presenter';
 
 const internalIdSelector = (state, ownProps) => ownProps.internalId;
@@ -81,7 +81,7 @@ const mapStateToProps = createSelector([
 const onEditDraft = ({ internalId, draft, message }) => dispatch =>
   dispatch(saveDraft({ internalId, draft, message }, { withThrottle: true }));
 
-const onSaveDraft = ({ internalId, draft, message }) => dispatch =>
+const onSaveDraft = ({ internalId, draft, message }) => async dispatch =>
   dispatch(saveDraft({ internalId, draft, message }, { force: true }));
 
 const onDeleteMessage = ({ message, internalId }) => async (dispatch) => {

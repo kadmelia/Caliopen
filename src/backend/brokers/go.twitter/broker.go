@@ -155,14 +155,12 @@ func Initialize(conf BrokerConfig) (broker *TwitterBroker, err error) {
 	broker.Notifier = Notifications.NewNotificationsFacility(caliopenConfig, broker.NatsConn)
 	broker.Connectors = TwitterBrokerConnectors{
 		Egress: make(chan NatsCom, 5),
+		Halt:   make(chan struct{}),
 	}
 	return
 }
 
 func (broker *TwitterBroker) ShutDown() {
-	broker.NatsConn.Close()
-	broker.Store.Close()
-	broker.Index.Close()
 	if _, ok := <-broker.Connectors.Egress; ok {
 		close(broker.Connectors.Egress)
 	}

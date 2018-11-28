@@ -79,7 +79,6 @@ func (w *Worker) getOrCreateWorker(userId, remoteId string) *AccountWorker {
 		w.RegisterWorker(accountWorker)
 		go accountWorker.Start()
 		return accountWorker
-
 	}
 }
 

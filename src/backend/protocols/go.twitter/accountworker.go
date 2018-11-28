@@ -107,7 +107,7 @@ func (worker *AccountWorker) Start() {
 			select {
 			case egress, ok := <-worker.broker.Connectors.Egress:
 				if !ok {
-					log.Infof("Egress chan for worker %s has been closed. Shutting-down it.", worker.userAccount.userID.String()+worker.userAccount.remoteID.String())
+					log.Infof("Egress chan for worker %s-%s has been closed. Shutting-down it.", worker.userAccount.userID.String(), worker.userAccount.remoteID.String())
 					worker.WorkerDesk <- Stop
 					return
 				}

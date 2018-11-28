@@ -18,7 +18,7 @@ func (cb *CassandraBackend) UsernameIsAvailable(username string) (resp bool, err
 	err = nil
 	lookup := helpers.EscapeUsername(username)
 	found := map[string]interface{}{}
-	err = cb.Session.Query(`SELECT COUNT(*) FROM user_name WHERE name = ?`, lookup).MapScan(found)
+	err = cb.SessionQuery(`SELECT COUNT(*) FROM user_name WHERE name = ?`, lookup).MapScan(found)
 	if err != nil {
 		log.WithError(err).Infof("username lookup error : %v", err)
 		return
@@ -34,7 +34,7 @@ func (cb *CassandraBackend) UsernameIsAvailable(username string) (resp bool, err
 // if a user_id is found, the user is fetched from user table.
 func (cb *CassandraBackend) UserByUsername(username string) (user *User, err error) {
 	user_id := new(gocql.UUID)
-	err = cb.Session.Query(`SELECT user_id FROM user_name WHERE name = ?`, username).Scan(user_id)
+	err = cb.SessionQuery(`SELECT user_id FROM user_name WHERE name = ?`, username).Scan(user_id)
 	if err != nil || len(user_id.Bytes()) == 0 {
 		return nil, err
 	}

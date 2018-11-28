@@ -48,7 +48,7 @@ func (cb *CassandraBackend) StoreRawMessage(msg obj.RawMessage) (err error) {
 func (cb *CassandraBackend) GetRawMessage(raw_message_id string) (message obj.RawMessage, err error) {
 
 	m := map[string]interface{}{}
-	q := cb.Session.Query(`SELECT * FROM raw_message WHERE raw_msg_id = ?`, raw_message_id)
+	q := cb.SessionQuery(`SELECT * FROM raw_message WHERE raw_msg_id = ?`, raw_message_id)
 	err = q.MapScan(m)
 	if err != nil {
 		return obj.RawMessage{}, err
@@ -75,5 +75,5 @@ func (cb *CassandraBackend) GetRawMessage(raw_message_id string) (message obj.Ra
 }
 
 func (cb *CassandraBackend) SetDeliveredStatus(raw_msg_id string, delivered bool) error {
-	return cb.Session.Query(`UPDATE raw_message SET delivered = ? WHERE raw_msg_id = ?`, delivered, raw_msg_id).Exec()
+	return cb.SessionQuery(`UPDATE raw_message SET delivered = ? WHERE raw_msg_id = ?`, delivered, raw_msg_id).Exec()
 }

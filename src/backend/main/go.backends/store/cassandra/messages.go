@@ -25,7 +25,7 @@ func (cb *CassandraBackend) RetrieveMessage(user_id, msg_id string) (msg *Messag
 
 	msg = new(Message).NewEmpty().(*Message) // correctly initialize nested values
 	m := map[string]interface{}{}
-	q := cb.Session.Query(`SELECT * FROM message WHERE user_id = ? and message_id = ?`, user_id, msg_id)
+	q := cb.SessionQuery(`SELECT * FROM message WHERE user_id = ? and message_id = ?`, user_id, msg_id)
 	err = q.MapScan(m)
 	if err != nil {
 		return nil, err
@@ -64,6 +64,6 @@ func (cb *CassandraBackend) DeleteMessage(msg *Message) error {
 }
 
 func (cb *CassandraBackend) SetMessageUnread(user_id, message_id string, status bool) (err error) {
-	q := cb.Session.Query(`UPDATE message SET is_unread= ? WHERE message_id = ? AND user_id = ?`, status, message_id, user_id)
+	q := cb.SessionQuery(`UPDATE message SET is_unread= ? WHERE message_id = ? AND user_id = ?`, status, message_id, user_id)
 	return q.Exec()
 }

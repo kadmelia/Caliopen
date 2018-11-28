@@ -50,7 +50,7 @@ func (cb *CassandraBackend) RetrieveContact(user_id, contact_id string) (contact
 	// retrieve contact
 	contact = new(Contact).NewEmpty().(*Contact)
 	m := map[string]interface{}{}
-	q := cb.Session.Query(`SELECT * FROM contact WHERE user_id = ? AND contact_id = ?`, user_id, contact_id)
+	q := cb.SessionQuery(`SELECT * FROM contact WHERE user_id = ? AND contact_id = ?`, user_id, contact_id)
 	err = q.MapScan(m)
 	if err != nil {
 		return nil, err
@@ -116,7 +116,7 @@ func (cb *CassandraBackend) UpdateContact(contact, oldContact *Contact, fields m
 func (cb *CassandraBackend) DeleteContact(contact *Contact) error {
 
 	// (hard) delete contact. TODO: soft delete
-	err := cb.Session.Query(`DELETE FROM contact WHERE user_id = ? AND contact_id = ?`, contact.UserId.String(), contact.ContactId.String()).Exec()
+	err := cb.SessionQuery(`DELETE FROM contact WHERE user_id = ? AND contact_id = ?`, contact.UserId.String(), contact.ContactId.String()).Exec()
 	if err != nil {
 		return err
 	}
@@ -141,14 +141,14 @@ func (cb *CassandraBackend) DeleteContact(contact *Contact) error {
 }
 
 func (cb *CassandraBackend) LookupContactsByIdentifier(user_id, address string) (contact_ids []string, err error) {
-	err = cb.Session.Query(`SELECT contact_ids FROM contact_lookup WHERE user_id=? and value=? and type='email'`, user_id, address).Scan(&contact_ids)
+	err = cb.SessionQuery(`SELECT contact_ids FROM contact_lookup WHERE user_id=? and value=? and type='email'`, user_id, address).Scan(&contact_ids)
 	return
 }
 
 // ContactExist exposes a simple API to check if a contact with these uuids exits in db
 func (cb *CassandraBackend) ContactExists(userId, contactId string) bool {
 	var count int
-	err := cb.Session.Query(`SELECT count(*) FROM contact WHERE user_id = ? AND contact_id = ?`, userId, contactId).Scan(&count)
+	err := cb.SessionQuery(`SELECT count(*) FROM contact WHERE user_id = ? AND contact_id = ?`, userId, contactId).Scan(&count)
 	if err != nil || count == 0 {
 		return false
 	}

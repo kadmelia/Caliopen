@@ -21,7 +21,7 @@ func (cb *CassandraBackend) PutNotificationInQueue(notif *Notification) error {
 	var ttl NotificationTTL
 
 	// TODO: find a way to avoid retrieving duration from cassandra for each Put
-	err := cb.Session.Query(`SELECT * FROM notification_ttl WHERE ttl_code = ?`, notif.TTLcode).Scan(&ttl.TTLcode, &ttl.Description, &ttl.TTLduration)
+	err := cb.SessionQuery(`SELECT * FROM notification_ttl WHERE ttl_code = ?`, notif.TTLcode).Scan(&ttl.TTLcode, &ttl.Description, &ttl.TTLduration)
 	if err != nil {
 		log.WithError(err).Error("[CassandraBackend]PutNotificationInQueue failed to retrieve ttl")
 		return err
@@ -61,7 +61,7 @@ func (cb *CassandraBackend) RetrieveNotifications(userId string, from, to time.T
 		values = append(values, to)
 	}
 
-	notifs_found, err := cb.Session.Query(query_builder.String(), values...).Iter().SliceMap()
+	notifs_found, err := cb.SessionQuery(query_builder.String(), values...).Iter().SliceMap()
 	if err != nil {
 		return notifs, err
 	}
@@ -105,10 +105,10 @@ func (cb *CassandraBackend) DeleteNotifications(userId string, until time.Time) 
 	}
 
 	var notifId gocql.UUID
-	iter := cb.Session.Query(query_builder.String(), values...).Iter()
+	iter := cb.SessionQuery(query_builder.String(), values...).Iter()
 
 	for iter.Scan(&notifId) {
-		e := cb.Session.Query(`DELETE FROM notification WHERE user_id = ? AND notif_id = ?`, userId, notifId).Exec()
+		e := cb.SessionQuery(`DELETE FROM notification WHERE user_id = ? AND notif_id = ?`, userId, notifId).Exec()
 		if e != nil {
 			log.WithError(e).Warnf("[DeleteNotifications] failed to delete notif %s for user %s", notifId.String(), userId)
 		}

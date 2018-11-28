@@ -18,7 +18,7 @@ import (
 )
 
 func (cb *CassandraBackend) RetrieveUser(user_id string) (user *User, err error) {
-	u, err := cb.Session.Query(`SELECT * FROM user WHERE user_id = ?`, user_id).Iter().SliceMap()
+	u, err := cb.SessionQuery(`SELECT * FROM user WHERE user_id = ?`, user_id).Iter().SliceMap()
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (cb *CassandraBackend) UpdateUser(user *User, fields map[string]interface{}
 }
 
 func (cb *CassandraBackend) UpdateUserPasswordHash(user *User) error {
-	return cb.Session.Query(`UPDATE user SET password = ?, privacy_features = ? WHERE user_id = ?`,
+	return cb.SessionQuery(`UPDATE user SET password = ?, privacy_features = ? WHERE user_id = ?`,
 		user.Password,
 		user.PrivacyFeatures,
 		user.UserId,
@@ -62,7 +62,7 @@ func (cb *CassandraBackend) UpdateUserPasswordHash(user *User) error {
 // if a user_id is found, the user is fetched from user table.
 func (cb *CassandraBackend) UserByRecoveryEmail(email string) (user *User, err error) {
 	user_id := new(gocql.UUID)
-	err = cb.Session.Query(`SELECT user_id FROM user_recovery_email WHERE recovery_email = ?`, email).Scan(user_id)
+	err = cb.SessionQuery(`SELECT user_id FROM user_recovery_email WHERE recovery_email = ?`, email).Scan(user_id)
 	if err != nil || len(user_id.Bytes()) == 0 {
 		return nil, err
 	}
@@ -71,5 +71,5 @@ func (cb *CassandraBackend) UserByRecoveryEmail(email string) (user *User, err e
 
 // DeleteUser sets the date_delete in the database
 func (cb *CassandraBackend) DeleteUser(user_id string) error {
-	return cb.Session.Query(`UPDATE user SET date_delete = ? WHERE user_id = ?`, time.Now(), user_id).Exec()
+	return cb.SessionQuery(`UPDATE user SET date_delete = ? WHERE user_id = ?`, time.Now(), user_id).Exec()
 }

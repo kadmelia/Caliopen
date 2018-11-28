@@ -103,3 +103,14 @@ func (cb *CassandraBackend) initialize(config CassandraConfig) (err error) {
 func (cb *CassandraBackend) Close() {
 	cb.Session.Close()
 }
+
+// SessionQuery is a wrapper to cb.Session.Query(…………) that re-init a Session if it has been closed
+func (cb *CassandraBackend) SessionQuery(stmt string, values ...interface{}) *gocql.Query {
+	if cb.Session.Closed() {
+		err := cb.initialize(cb.CassandraConfig)
+		if err != nil {
+			log.WithError(err).Warn("[CassandraBackend] SessionQuery failed to re-init a gocql Session")
+		}
+	}
+	return cb.Session.Query(stmt, values...)
+}

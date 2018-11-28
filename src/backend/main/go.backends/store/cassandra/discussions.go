@@ -10,7 +10,7 @@ import (
 
 // CreateThreadLookup inserts a new entry into discussion_thread_lookup table
 func (cb *CassandraBackend) CreateThreadLookup(user_id, discussion_id UUID, external_msg_id string) error {
-	return cb.Session.Query(`INSERT INTO discussion_thread_lookup (user_id, external_root_msg_id, discussion_id) VALUES (?,?,?)`,
+	return cb.SessionQuery(`INSERT INTO discussion_thread_lookup (user_id, external_root_msg_id, discussion_id) VALUES (?,?,?)`,
 		user_id.String(),
 		external_msg_id,
 		discussion_id.String()).Exec()

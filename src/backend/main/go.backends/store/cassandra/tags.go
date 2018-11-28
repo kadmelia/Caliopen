@@ -13,7 +13,7 @@ import (
 
 // retrieve tags of type 'user' belonging to user_id
 func (cb *CassandraBackend) RetrieveUserTags(user_id string) (tags []Tag, err error) {
-	all_tags, err := cb.Session.Query(`SELECT * FROM user_tag WHERE user_id = ?`, user_id).Iter().SliceMap()
+	all_tags, err := cb.SessionQuery(`SELECT * FROM user_tag WHERE user_id = ?`, user_id).Iter().SliceMap()
 	if err != nil {
 		return
 	}
@@ -35,7 +35,7 @@ func (cb *CassandraBackend) CreateTag(tag *Tag) error {
 	user_id, _ := gocql.UUIDFromBytes((*tag).User_id.Bytes())
 	(*tag).Date_insert = time.Now()
 	(*tag).Type = TagType(UserTag)
-	return cb.Session.Query(`INSERT INTO user_tag (user_id, name, date_insert, importance_level, label, type) VALUES (?,?,?,?,?,?)`,
+	return cb.SessionQuery(`INSERT INTO user_tag (user_id, name, date_insert, importance_level, label, type) VALUES (?,?,?,?,?,?)`,
 		user_id,
 		(*tag).Name,
 		(*tag).Date_insert,
@@ -45,7 +45,7 @@ func (cb *CassandraBackend) CreateTag(tag *Tag) error {
 }
 
 func (cb *CassandraBackend) RetrieveTag(user_id, name string) (tag Tag, err error) {
-	tags, err := cb.Session.Query(`SELECT * FROM user_tag WHERE user_id = ? AND name = ?`, user_id, name).Iter().SliceMap()
+	tags, err := cb.SessionQuery(`SELECT * FROM user_tag WHERE user_id = ? AND name = ?`, user_id, name).Iter().SliceMap()
 	if err != nil {
 		return
 	}
@@ -62,7 +62,7 @@ func (cb *CassandraBackend) RetrieveTag(user_id, name string) (tag Tag, err erro
 }
 
 func (cb *CassandraBackend) UpdateTag(tag *Tag) error {
-	return cb.Session.Query(`UPDATE user_tag SET importance_level = ?, label = ?, type = ? WHERE user_id = ? AND name = ?`,
+	return cb.SessionQuery(`UPDATE user_tag SET importance_level = ?, label = ?, type = ? WHERE user_id = ? AND name = ?`,
 		tag.Importance_level,
 		tag.Label,
 		tag.Type,
@@ -73,5 +73,5 @@ func (cb *CassandraBackend) UpdateTag(tag *Tag) error {
 }
 
 func (cb *CassandraBackend) DeleteTag(user_id, name string) error {
-	return cb.Session.Query(`DELETE FROM user_tag WHERE user_id = ? AND name = ?`, user_id, name).Exec()
+	return cb.SessionQuery(`DELETE FROM user_tag WHERE user_id = ? AND name = ?`, user_id, name).Exec()
 }

@@ -12,7 +12,7 @@ func (cb *CassandraBackend) GetSettings(user_id string) (settings *Settings, err
 
 	settings = new(Settings).NewEmpty().(*Settings)
 	m := map[string]interface{}{}
-	q := cb.Session.Query(`SELECT * FROM settings WHERE user_id = ?`, user_id)
+	q := cb.SessionQuery(`SELECT * FROM settings WHERE user_id = ?`, user_id)
 	err = q.MapScan(m)
 	if err != nil {
 		return nil, err

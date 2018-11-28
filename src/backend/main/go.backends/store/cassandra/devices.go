@@ -56,7 +56,7 @@ func (cb *CassandraBackend) CreateDevice(device *Device) error {
 
 // retrieve devices belonging to user_id
 func (cb *CassandraBackend) RetrieveDevices(userId string) (devices []Device, err error) {
-	all_devices, err := cb.Session.Query(`SELECT * FROM device WHERE user_id = ?`, userId).Iter().SliceMap()
+	all_devices, err := cb.SessionQuery(`SELECT * FROM device WHERE user_id = ?`, userId).Iter().SliceMap()
 	if err != nil {
 		return
 	}
@@ -82,7 +82,7 @@ func (cb *CassandraBackend) RetrieveDevice(userId, deviceId string) (device *Dev
 
 	device = new(Device).NewEmpty().(*Device)
 	d := map[string]interface{}{}
-	q := cb.Session.Query(`SELECT * FROM device WHERE user_id = ? AND device_id = ?`, userId, deviceId)
+	q := cb.SessionQuery(`SELECT * FROM device WHERE user_id = ? AND device_id = ?`, userId, deviceId)
 	err = q.MapScan(d)
 	if err != nil {
 		return nil, err
@@ -148,7 +148,7 @@ func (cb *CassandraBackend) UpdateDevice(device, oldDevice *Device, fields map[s
 
 func (cb *CassandraBackend) DeleteDevice(device *Device) error {
 	// (hard) delete device. TODO: soft delete
-	err := cb.Session.Query(`DELETE FROM device WHERE user_id = ? AND device_id = ?`, device.UserId.String(), device.DeviceId.String()).Exec()
+	err := cb.SessionQuery(`DELETE FROM device WHERE user_id = ? AND device_id = ?`, device.UserId.String(), device.DeviceId.String()).Exec()
 	if err != nil {
 		return err
 	}

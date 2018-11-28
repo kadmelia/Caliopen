@@ -202,7 +202,7 @@ func (worker *AccountWorker) PollDM() {
 				}
 			}
 		} else {
-			log.WithError(retrieveErr).Warnf("[AccountWorker %s] PollDM failed to retrieve infos map", worker.userAccount.remoteID.String())
+			log.WithError(retrieveErr).Warnf("[AccountWorker %s] PollDM failed to retrieve infos map", worker.userAccount.remoteID.String())
 			return
 		}
 	} else {

@@ -14,7 +14,7 @@ import (
 
 func (cb *CassandraBackend) CreatePGPPubKey(pubkey *PublicKey) CaliopenError {
 	// write complete statement because gocassa failed to retrieve tag "use" and write quotes to cassandra
-	err := cb.Session.Query(`UPDATE public_key SET 
+	err := cb.SessionQuery(`UPDATE public_key SET 
 	alg = ?,
 	crv = ?,
 	date_insert = ?,
@@ -55,7 +55,7 @@ func (cb *CassandraBackend) CreatePGPPubKey(pubkey *PublicKey) CaliopenError {
 }
 
 func (cb *CassandraBackend) RetrieveContactPubKeys(userId, contactId string) (keys PublicKeys, err CaliopenError) {
-	ks, e := cb.Session.Query(`SELECT * FROM public_key WHERE user_id = ? AND resource_id = ?`, userId, contactId).Iter().SliceMap()
+	ks, e := cb.SessionQuery(`SELECT * FROM public_key WHERE user_id = ? AND resource_id = ?`, userId, contactId).Iter().SliceMap()
 	if e != nil {
 		return nil, WrapCaliopenErrf(e, DbCaliopenErr, "[CassandraBackend]RetrieveContactPubKeys failed")
 	}
@@ -69,7 +69,7 @@ func (cb *CassandraBackend) RetrieveContactPubKeys(userId, contactId string) (ke
 
 func (cb *CassandraBackend) RetrievePubKey(userId, resourceId, keyId string) (pubkey *PublicKey, err CaliopenError) {
 	result := map[string]interface{}{}
-	e := cb.Session.Query(`SELECT * FROM public_key WHERE user_id = ? AND resource_id = ? AND key_id = ?`, userId, resourceId, keyId).MapScan(result)
+	e := cb.SessionQuery(`SELECT * FROM public_key WHERE user_id = ? AND resource_id = ? AND key_id = ?`, userId, resourceId, keyId).MapScan(result)
 	if e != nil {
 		if e.Error() == "not found" {
 			err = WrapCaliopenErr(NewCaliopenErr(NotFoundCaliopenErr, "not found"), DbCaliopenErr, "[CassandraBackend]RetrievePubKey not found in db")
@@ -114,7 +114,7 @@ func (cb *CassandraBackend) UpdatePubKey(newPubKey, oldPubKey *PublicKey, fields
 }
 
 func (cb *CassandraBackend) DeletePubKey(pubkey *PublicKey) CaliopenError {
-	e := cb.Session.Query(`DELETE FROM public_key WHERE user_id = ? AND resource_id = ? AND key_id = ?`, pubkey.UserId, pubkey.ResourceId, pubkey.KeyId).Exec()
+	e := cb.SessionQuery(`DELETE FROM public_key WHERE user_id = ? AND resource_id = ? AND key_id = ?`, pubkey.UserId, pubkey.ResourceId, pubkey.KeyId).Exec()
 	if e != nil {
 		return NewCaliopenErrf(DbCaliopenErr, "[CassandraBackend]DeletePubKey returned err from cassandra : %s", e.Error())
 	}

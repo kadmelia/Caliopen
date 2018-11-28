@@ -30,7 +30,7 @@ func (cb *CassandraBackend) RetrieveCredentials(userId, identityId string) (cred
 		return cb.Vault.RetrieveCredentials(userId, identityId)
 	}
 
-	err = cb.Session.Query(`SELECT credentials FROM user_identity WHERE user_id = ? AND identity_id = ?`, userId, identityId).Scan(&cred)
+	err = cb.SessionQuery(`SELECT credentials FROM user_identity WHERE user_id = ? AND identity_id = ?`, userId, identityId).Scan(&cred)
 
 	return
 }

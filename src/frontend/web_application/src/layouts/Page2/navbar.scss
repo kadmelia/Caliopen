@@ -1,7 +1,9 @@
 @import '../../styles/object/o-navigation';
+@import '../../styles/object/o-pi-border.scss';
 @import '../../styles/vendor/bootstrap_foundation-sites';
 
-$item-active-height: rem-calc($co-component__height + 0.25rem);
+$item-active-height: 3.125rem + (rem_calc($pi-border__size) * 2); // $m-navbar-item-height--active
+$item-height: 2.75rem + (rem_calc($pi-border__size) * 2); // $m-navbar-item-height
 
 .l-navbar {
   height: $item-active-height;
@@ -15,8 +17,9 @@ $item-active-height: rem-calc($co-component__height + 0.25rem);
       width: 100%;
       background-color: #d9f2fe;
 
+      // XXX: refactor
       .m-horizontal-scroll {
-        height: $co-component__height;
+        height: $item-height;
         background-image: none;
       }
 
@@ -26,10 +29,10 @@ $item-active-height: rem-calc($co-component__height + 0.25rem);
       }
 
       .m-navbar-item--is-active {
-        height: $co-component__height;
+        height: $item-height;
 
         .m-item-link {
-          line-height: $co-component__height;
+          line-height: $item-height;
         }
       }
 

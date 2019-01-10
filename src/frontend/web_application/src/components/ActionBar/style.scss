@@ -1,5 +1,6 @@
 @import '../../styles/common';
 @import '../../styles/vendor/bootstrap_foundation-sites';
+@import '../../styles/object/o-pi-border.scss';
 
 .m-action-bar {
   position: relative;
@@ -7,7 +8,7 @@
   // attribute is also set in @o-form-element-select-wrapper
   z-index: $l-z-index__action-bar;
   background: $co-color__fg__back;
-  line-height: $co-component__height;
+  line-height: $co-component__height + rem_calc($pi-border__size);
 
   &--hr {
     border-bottom: 3px solid $co-color__sidebar__back;

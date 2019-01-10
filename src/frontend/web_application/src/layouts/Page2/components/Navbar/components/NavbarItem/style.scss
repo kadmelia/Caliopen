@@ -1,8 +1,10 @@
+@import '../../../../../../styles/vendor/bootstrap_foundation-sites';
 @import '../../../../../../styles/object/o-navigation';
+@import '../../../../../../styles/object/o-pi-border.scss';
 
 $m-navbar-item__content--max-width: 12rem !default;
-$m-navbar-item-height: 2.563rem;
-$m-navbar-item-height--active: 2.875rem;
+$m-navbar-item-height: 2.75rem + (rem_calc($pi-border__size) * 2); // 44px + 3px * 2
+$m-navbar-item-height--active: 3.125rem + (rem_calc($pi-border__size) * 2); // 50px + 3px * 2
 
 .m-navbar-item {
   $baseClassName: &;
@@ -30,6 +32,8 @@ $m-navbar-item-height--active: 2.875rem;
   }
 
   &--is-active {
+    position: relative;
+    z-index: $l-z-index__active-tab;
     height: $m-navbar-item-height--active;
     margin-top: 0;
     margin-left: 0;

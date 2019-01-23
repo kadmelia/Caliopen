@@ -70,7 +70,7 @@ func (f *Fetcher) SyncRemoteWithLocal(order IMAPorder) error {
 		"Infos": userIdentity.Infos,
 	})
 	if err != nil {
-		log.WithError(err).Infof("[SyncRemoteWithLocal] failed to update remote identity <%s> : <%s>", order.UserId, order.RemoteId)
+		log.WithError(err).Warnf("[SyncRemoteWithLocal] failed to update remote identity <%s> : <%s>", order.UserId, order.RemoteId)
 		return err
 	}
 

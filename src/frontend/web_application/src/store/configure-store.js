@@ -31,10 +31,6 @@ if (CALIOPEN_ENV === 'development' || CALIOPEN_ENV === 'staging') {
   middlewares.push(require('./middlewares/freeze').default); // eslint-disable-line
 }
 
-if (BUILD_TARGET === 'browser') {
-  middlewares.push(require('./middlewares/openpgp-middleware').default); // eslint-disable-line
-}
-
 const createStoreWithMiddleware = applyMiddleware(...middlewares)(createStore);
 
 function configureStore(initialState, extension) {

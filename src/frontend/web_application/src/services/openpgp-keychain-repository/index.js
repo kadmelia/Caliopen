@@ -1,11 +1,21 @@
-import { Keyring } from 'openpgp';
-
 export const [PUBLIC_KEY, PRIVATE_KEY] = ['public', 'private'];
 
-const keyring = new Keyring();
+const getKeyring = async () => {
+  const { Keyring } = await import(/* webpackChunkName: "openpgp" */ 'openpgp');
+
+  return new Keyring();
+};
+
+const loadKeyring = async () => {
+  const keyring = await getKeyring();
+
+  await keyring.load();
+
+  return keyring;
+};
 
 export async function getPrimaryKeysByFingerprint() {
-  await keyring.load();
+  const keyring = await loadKeyring();
 
   return keyring.getAllKeys().reduce((acc, key) => {
     const { fingerprint } = key;
@@ -15,14 +25,14 @@ export async function getPrimaryKeysByFingerprint() {
       ...acc,
       [fingerprint]: {
         ...acc[fingerprint],
-        [keyType]: key,
+        [keyType]: key.armor(),
       },
     };
   }, {});
 }
 
 export async function getKeysForEmail(email, keyType = PUBLIC_KEY) {
-  await keyring.load();
+  const keyring = await loadKeyring();
 
   if (keyType === PUBLIC_KEY) {
     return keyring.publicKeys.getForAddress(email);
@@ -36,8 +46,10 @@ export async function getKeysForEmail(email, keyType = PUBLIC_KEY) {
 }
 
 export async function saveKey(publicKeyArmored, privateKeyArmored) {
-  keyring.publicKeys.importKey(publicKeyArmored);
-  keyring.privateKeys.importKey(privateKeyArmored);
+  const keyring = await loadKeyring();
+
+  await keyring.publicKeys.importKey(publicKeyArmored);
+  await keyring.privateKeys.importKey(privateKeyArmored);
 
   const error = await keyring.store();
 
@@ -45,6 +57,8 @@ export async function saveKey(publicKeyArmored, privateKeyArmored) {
 }
 
 export async function deleteKey(fingerprint) {
+  const keyring = await getKeyring();
+
   keyring.removeKeysForId(fingerprint);
   const error = await keyring.store();
 

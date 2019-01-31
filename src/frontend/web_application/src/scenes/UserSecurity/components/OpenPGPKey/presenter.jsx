@@ -7,9 +7,12 @@ import { Button, Spinner, Icon, TextareaFieldGroup, DefList } from '../../../../
 import getPGPManager from '../../../../services/openpgp-manager';
 import './style.scss';
 
-function generateStateFromProps({ props, getKeyFromASCII, keyStatuses }) {
-  const publicKey = getKeyFromASCII(props.publicKeyArmored);
+async function generateStateFromProps({ props, getKeyFromASCII, keyStatuses }) {
+  const publicKey = await getKeyFromASCII(props.publicKeyArmored);
   const { primaryKey: { fingerprint, created, algorithm } } = publicKey;
+  const { user: { userId: { userid: userId } } } = await publicKey.getPrimaryUser();
+  const { expirationTime } = await publicKey.getExpirationTime();
+  const { bits: bitSize } = await publicKey.primaryKey.getAlgorithmInfo();
 
   return {
     isLoading: false,
@@ -17,9 +20,9 @@ function generateStateFromProps({ props, getKeyFromASCII, keyStatuses }) {
       fingerprint,
       created,
       algorithm,
-      userId: publicKey.getPrimaryUser().user.userId.userid,
-      expirationTime: publicKey.getExpirationTime(),
-      bitSize: publicKey.primaryKey.getBitSize(),
+      userId,
+      expirationTime,
+      bitSize,
       userIds: publicKey.users.map(user => user.userId.userid),
       keyStatus: Object.keys(keyStatuses)
         .find(statusLiteral => keyStatuses[statusLiteral] === publicKey.verifyPrimaryKey()),
@@ -61,13 +64,19 @@ class OpenPGPKey extends Component {
   }
 
   componentDidMount() {
-    getPGPManager().then(({ getKeyFromASCII, module: { enums: { keyStatus: keyStatuses } } }) =>
-      this.setState(generateStateFromProps({ props: this.props, getKeyFromASCII, keyStatuses })));
+    getPGPManager()
+      .then(async ({ getKeyFromASCII, module: { enums: { keyStatus: keyStatuses } } }) =>
+        this.setState(await generateStateFromProps({
+          props: this.props, getKeyFromASCII, keyStatuses,
+        })));
   }
 
   componentWillReceiveProps(newProps) {
-    getPGPManager().then(({ getKeyFromASCII, module: { enums: { keyStatus: keyStatuses } } }) =>
-      this.setState(generateStateFromProps({ props: newProps, getKeyFromASCII, keyStatuses })));
+    getPGPManager()
+      .then(async ({ getKeyFromASCII, module: { enums: { keyStatus: keyStatuses } } }) =>
+        this.setState(await generateStateFromProps({
+          props: newProps, getKeyFromASCII, keyStatuses,
+        })));
   }
 
   handleDeleteKey() {

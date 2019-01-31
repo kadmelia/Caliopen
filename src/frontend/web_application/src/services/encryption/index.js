@@ -49,3 +49,9 @@ export const decryptDraft = async (draft, keys) => {
   return { ...draft, body, privacy_features: undefined };
 };
 
+export const generateKey = async (options) => {
+  const openpgp = await import(/* webpackChunkName: "openpgp" */ 'openpgp');
+
+  return openpgp.generateKey(options);
+};
+

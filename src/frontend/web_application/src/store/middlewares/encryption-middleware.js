@@ -2,7 +2,7 @@ import { CREATE_MESSAGE, UPDATE_MESSAGE } from '../modules/message';
 import { requestPublicKeys } from '../modules/public-key';
 import { getRecipients } from '../../services/message';
 import { tryCatchAxiosAction } from '../../services/api-client';
-import { encryptDraft } from '../../modules/draftMessage/services/encryption';
+import { encryptDraft } from '../../services/encryption';
 
 export class DraftEncryptionException extends Error {}
 export class ContactNotFoundException extends DraftEncryptionException {}

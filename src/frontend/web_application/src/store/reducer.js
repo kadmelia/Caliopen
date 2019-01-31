@@ -10,7 +10,6 @@ import importanceLevelReducer from './modules/importance-level';
 import localIdentityReducer from './modules/local-identity';
 import messageReducer from './modules/message';
 import notificationReducer from './modules/notification';
-import openPGPKeychainReducer from './modules/openpgp-keychain';
 import participantSuggestionsReducer from './modules/participant-suggestions';
 import providerReducer from './modules/provider';
 import remoteIdentityReducer from './modules/remote-identity';
@@ -32,7 +31,6 @@ const reducer = combineReducers({
   localIdentity: localIdentityReducer,
   message: messageReducer,
   notification: notificationReducer,
-  openPGPKeychain: openPGPKeychainReducer,
   participantSuggestions: participantSuggestionsReducer,
   provider: providerReducer,
   remoteIdentity: remoteIdentityReducer,

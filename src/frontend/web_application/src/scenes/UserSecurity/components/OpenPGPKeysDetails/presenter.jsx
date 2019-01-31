@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Trans } from '@lingui/react';
 import { Icon, Button } from '../../../../components/';
+import { getPrimaryKeysByFingerprint, saveKey } from '../../../../services/openpgp-keychain-repository';
+import { generateKey } from '../../../../services/encryption';
 import OpenPGPKey from '../OpenPGPKey';
 import OpenPGPKeyForm from '../OpenPGPKeyForm';
 import './style.scss';
@@ -9,35 +11,64 @@ import './style.scss';
 class OpenPGPKeysDetails extends Component {
   static propTypes = {
     user: PropTypes.shape({}).isRequired,
-    privateKeys: PropTypes.arrayOf(PropTypes.shape({})),
     importForm: PropTypes.shape({}),
     isLoading: PropTypes.bool,
-    onDeleteKey: PropTypes.func.isRequired,
-    onImportKey: PropTypes.func.isRequired,
-    onGenerateKey: PropTypes.func.isRequired,
-    prefetch: PropTypes.func.isRequired,
   };
 
   static defaultProps = {
-    privateKeys: null,
     importForm: null,
     isLoading: false,
   }
 
   state = {
     editMode: false,
+    keys: undefined,
   };
 
   componentDidMount() {
-    if (this.props.prefetch) {
-      this.props.prefetch();
+    getPrimaryKeysByFingerprint()
+      .then(keys => this.setState({
+        ...this.state,
+        keys,
+      }));
+  }
+
+  getPrivateKeys = () => Object.values(this.state.keys || {});
+  getUserEmails = () => {
+    const { user: { contact, title } } = this.props;
+
+    if (contact) {
+      return contact.emails.map(({ address }) => ({ name: title, email: address }));
     }
+
+    return null;
   }
 
   handleClickEditMode = () => {
     this.setState(prevState => ({
       editMode: !prevState.editMode,
     }));
+  }
+
+  importKeys = async () => {
+    const { importForm: { publicKeyArmored, privateKeyArmored } } = this.props;
+
+    const error = await saveKey(publicKeyArmored, privateKeyArmored);
+
+    return error;
+  }
+
+  generateAndSaveKeys = async () => {
+    const options = {
+      userIds: this.getUserEmails(),
+      numbits: 4096,
+    };
+
+    const { privateKeyArmored, publicKeyArmored } = await generateKey(options);
+
+    const error = await saveKey(publicKeyArmored, privateKeyArmored);
+
+    return error;
   }
 
   renderPrivateKey = (keyPair, key) => {
@@ -61,24 +92,21 @@ class OpenPGPKeysDetails extends Component {
     const {
       isLoading,
       importForm,
-      privateKeys,
       user,
-      onImportKey,
-      onGenerateKey,
     } = this.props;
 
     const activeButtonProp = this.state.editMode ? { color: 'active' } : {};
 
     return (
       <div className="m-account-openpgp">
-        {privateKeys.map(this.renderPrivateKey)}
+        {this.getPrivateKeys().map(this.renderPrivateKey)}
         {this.state.editMode ? (
           <div>
             <OpenPGPKeyForm
               className="m-account-openpgp__form"
               emails={user.contact.emails}
-              onImport={onImportKey}
-              onGenerate={onGenerateKey}
+              onImport={this.importKeys}
+              onGenerate={this.generateAndSaveKeys}
               importForm={importForm}
               isLoading={isLoading}
               cancel={this.handleClickEditMode}

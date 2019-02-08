@@ -18,7 +18,7 @@ export async function getPrimaryKeysByFingerprint() {
   const keyring = await loadKeyring();
 
   return keyring.getAllKeys().reduce((acc, key) => {
-    const { fingerprint } = key;
+    const fingerprint = key.getFingerprint();
     const keyType = key.isPublic() ? 'publicKeyArmored' : 'privateKeyArmored';
 
     return {

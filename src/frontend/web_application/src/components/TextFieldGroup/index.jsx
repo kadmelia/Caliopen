@@ -29,8 +29,6 @@ class TextFieldGroup extends PureComponent {
     display: 'block',
   };
 
-  state = {}
-
   render() {
     const {
       id = uuidV1(),

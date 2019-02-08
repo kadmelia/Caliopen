@@ -1,9 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import getClient from '../../services/api-client';
-// import OpenPGPKeysDetails from './components/OpenPGPKeysDetails';
 import OpenPGPKeysDetails from './components/OpenPGPKeysDetails';
-// import TFAForm from './components/TFAForm';
 import { PageTitle, Section } from '../../components/';
 import PasswordDetails from './components/PasswordDetails';
 import LoginDetails from './components/LoginDetails';

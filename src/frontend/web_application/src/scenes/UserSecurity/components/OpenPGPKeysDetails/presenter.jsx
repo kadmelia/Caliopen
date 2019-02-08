@@ -11,16 +11,15 @@ import './style.scss';
 class OpenPGPKeysDetails extends Component {
   static propTypes = {
     user: PropTypes.shape({}).isRequired,
-    importForm: PropTypes.shape({}),
     isLoading: PropTypes.bool,
   };
 
   static defaultProps = {
-    importForm: null,
     isLoading: false,
   }
 
   state = {
+    importForm: {},
     editMode: false,
     keys: undefined,
   };
@@ -50,9 +49,7 @@ class OpenPGPKeysDetails extends Component {
     }));
   }
 
-  importKeys = async () => {
-    const { importForm: { publicKeyArmored, privateKeyArmored } } = this.props;
-
+  importKeys = async ({ publicKeyArmored, privateKeyArmored }) => {
     const error = await saveKey(publicKeyArmored, privateKeyArmored);
 
     return error;
@@ -91,7 +88,6 @@ class OpenPGPKeysDetails extends Component {
   render() {
     const {
       isLoading,
-      importForm,
       user,
     } = this.props;
 
@@ -107,7 +103,7 @@ class OpenPGPKeysDetails extends Component {
               emails={user.contact.emails}
               onImport={this.importKeys}
               onGenerate={this.generateAndSaveKeys}
-              importForm={importForm}
+              importForm={this.state.importForm}
               isLoading={isLoading}
               cancel={this.handleClickEditMode}
             />

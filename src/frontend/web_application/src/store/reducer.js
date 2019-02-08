@@ -19,6 +19,7 @@ import tagReducer from './modules/tag';
 import userReducer from './modules/user';
 import publicKeyReducer from './modules/public-key';
 import viewReducer from './modules/view';
+import encryptionReducer from './modules/encryption';
 
 const reducer = combineReducers({
   notifications: notifyReducer,
@@ -41,6 +42,7 @@ const reducer = combineReducers({
   form: formReducer,
   publicKey: publicKeyReducer,
   view: viewReducer,
+  encryption: encryptionReducer,
 });
 
 export default reducer;

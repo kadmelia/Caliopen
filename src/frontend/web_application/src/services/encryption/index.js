@@ -1,4 +1,7 @@
-const isDraftEncrypted = draft => draft.privacy_features && draft.message_encrypted === 'pgp';
+import { encryptMessage as encryptMessageStart, encryptMessageSuccess, encryptMessageFail, decryptMessage as decryptMessageStart, decryptMessageSuccess, decryptMessageFail } from '../../store/modules/encryption';
+
+const DEFAULT_KEY_OPTIONS = { numBits: 4096 };
+const isMessageEncrypted = message => message.privacy_features && message.privacy_features.message_encryption_method === 'pgp';
 
 const prepareKeys = async (openpgp, armoredKeys) => {
   const disarmoredKeys = await Promise.all(armoredKeys.map(armoredKey =>
@@ -9,13 +12,14 @@ const prepareKeys = async (openpgp, armoredKeys) => {
 };
 
 // Draft encryption
-export const encryptDraft = async (draft, keys) => {
+export const encryptMessage = dispatch => async (message, keys) => {
+  dispatch(encryptMessageStart());
   const openpgp = await import(/* webpackChunkName: "openpgp" */ 'openpgp');
 
-  if (keys.length === 0) return draft;
+  if (keys.length === 0) return message;
 
   const options = {
-    message: openpgp.message.fromText(draft.body),
+    message: openpgp.message.fromText(message.body),
     publicKeys: await prepareKeys(openpgp, keys),
     privateKeys: null,
   };
@@ -26,32 +30,51 @@ export const encryptDraft = async (draft, keys) => {
     message_encryption_method: 'pgp',
   };
 
-  const { data: body } = await openpgp.encrypt(options);
+  try {
+    const { data: body } = await openpgp.encrypt(options);
+    const encryptedMessage = { ...message, body, privacy_features };
 
-  return { ...draft, body, privacy_features };
+    dispatch(encryptMessageSuccess({ message, encryptedMessage }));
+
+    return encryptedMessage;
+  } catch (error) {
+    dispatch(encryptMessageFail({ message, error }));
+
+    return message;
+  }
 };
 
-export const decryptDraft = async (draft, keys) => {
-  if (!isDraftEncrypted(draft)) return draft;
-  if (!draft.user_identities) return draft;
+export const decryptMessage = dispatch => async (message, keys) => {
+  if (!isMessageEncrypted(message)) return message;
+  if (!message.user_identities) return message;
+
+  dispatch(decryptMessageStart({ message }));
 
   const openpgp = await import(/* webpackChunkName: "openpgp" */ 'openpgp');
-  // const keys = getUserPrivateKey(draft.user_identities[0]);
 
   const options = {
-    message: openpgp.message.fromText(draft.encrypted_body),
+    message: openpgp.message.fromText(message.encrypted_body),
     privateKeys: await prepareKeys(openpgp, keys),
     publicKeys: null,
   };
 
-  const { data: body } = await openpgp.decrypt(options);
+  try {
+    const { data: body } = await openpgp.decrypt(options);
+    const decryptedMessage = { ...message, body, privacy_features: undefined };
 
-  return { ...draft, body, privacy_features: undefined };
+    dispatch(decryptMessageSuccess({ message, decryptedMessage }));
+
+    return decryptedMessage;
+  } catch (error) {
+    dispatch(decryptMessageFail({ message, error }));
+
+    return message;
+  }
 };
 
 export const generateKey = async (options) => {
   const openpgp = await import(/* webpackChunkName: "openpgp" */ 'openpgp');
 
-  return openpgp.generateKey(options);
+  return openpgp.generateKey({ ...DEFAULT_KEY_OPTIONS, ...options });
 };
 

@@ -1,35 +1,48 @@
 @import '../../../../styles/common';
 @import '../../../../styles/vendor/bootstrap_foundation-sites';
 
-/* XXX add a margin when MailMessage is followed by InstantMessage */
+/* XXX add a margin when MailMessage is followed by MailMessage */
 .m-instant-message +.s-mail-message {
   margin-top: 2rem;
 }
 
 .s-mail-message {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto;
+  grid-template-areas:
+    "details"
+    "info"
+    "container"
+    "actions"
+  ;
   margin-bottom: 1rem;
-
-  &__wrapper {
-    display: flex;
-    flex-direction: column;
-    flex-wrap: wrap;
-    justify-content: stretch;
-    background-color: white;
-  }
+  background-color: #ffffff;
 
   &__info {
+    grid-area: info;
     display: flex;
     flex-direction: row;
-    flex-grow: 1;
-    flex-shrink: 0;
     flex-wrap: wrap;
-    order: 0;
-    width: 100%;
     padding: 1rem;
     background-color: #eeeeee;
 
-  }
+    &--super {
+      background-color: #edfffc;
+    }
 
+    &--good {
+      background-color: #edfffc;
+    }
+
+    &--bad {
+      background-color: #edfffc;
+    }
+
+    &--ugly {
+      background-color: #fff4f7;
+    }
+  }
 
   &__tags {
     margin-top: $co-component__spacing;
@@ -45,33 +58,11 @@
   }
 
   &__details {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    margin: 0 1rem;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #f9f9f9;
-    color: grey;
-
-    &--what-who-when {
-      display: inline;
-      font-size: 0.825rem;
-    }
-
-    &-to {
-      flex-grow: 1;
-      font-size: 0.825rem;
-      text-align: right;
-    }
-
-    &-from, &-to {
-      color: #515151;
-      text-decoration: none;
-    }
+    grid-area: details;
   }
 
   &__container {
-    flex-grow: 1;
+    grid-area: container;
   }
 
   &__content, &__subject {
@@ -85,39 +76,31 @@
   }
 
   &__actions {
+    grid-area: actions;
     background-color: #ecf9ff;
     font-size: 0.88rem;
     text-align: right;
   }
 
   @include breakpoint(medium) {
-    &__wrapper {
-      display: grid;
-      grid-template-columns: 13rem 1fr;
-      grid-template-rows: $co-component__height 1fr;
-    }
+    grid-template-columns: 13rem 1fr;
+    grid-template-rows: $co-component__height auto $co-component__height;
+    grid-template-areas:
+      "info details"
+      "info container"
+      "info actions"
+    ;
 
     &__info {
-      grid-column: 1;
-      grid-row: 1 / span 2;
       float: left;
       flex-direction: column;
       order: -1;
       width: 13rem;
-      height: 100%;
       padding: 3rem 1.5rem;
     }
 
     &__details {
-      grid-column: 2;
-      grid-row: 1/1;
-      max-width: 62rem;
-      height: $co-component__height;
-    }
-
-    &__container {
-      grid-column: 2;
-      grid-row: 2;
+      align-self: center;
     }
 
     &__participants, &__tags {
@@ -143,29 +126,5 @@
     &__actions {
       padding: 0 6rem;
     }
-  }
-}
-
-.super {
-  .s-mail-message__info {
-    background-color: #edfffc;
-  }
-}
-
-.good {
-  .s-mail-message__info {
-    background-color: #edfffc;
-  }
-}
-
-.bad {
-  .s-mail-message__info {
-    background-color: #edfffc;
-  }
-}
-
-.ugly {
-  .s-mail-message__info {
-    background-color: #fff4f7;
   }
 }

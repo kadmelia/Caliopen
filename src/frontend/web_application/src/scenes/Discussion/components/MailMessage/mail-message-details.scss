@@ -1,0 +1,34 @@
+@import '../../../../styles/common';
+@import '../../../../styles/vendor/bootstrap_foundation-sites';
+
+.m-mail-message-details {
+  @include flex-grid-row($size: expand);
+  margin-right: 1rem;
+  margin-left: 1rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  color: grey;
+
+  &__author,
+  &__recipients {
+    @include flex-grid-size(12);
+    color: #858585;
+    font-size: 0.825rem;
+  }
+
+  &__author-name {
+    font-weight: 800;
+  }
+
+  @include breakpoint(medium) {
+    border-bottom: 1px solid #f9f9f9;
+
+    &__recipients,
+    &__author {
+      @include flex-grid-size(6);
+    }
+    &__recipients {
+      text-align: right;
+    }
+  }
+}

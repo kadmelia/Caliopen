@@ -6,7 +6,7 @@ import classnames from 'classnames';
 import { withScrollTarget } from '../../../../modules/scroll';
 import { withPush } from '../../../../modules/routing/hoc/withPush';
 import { getTagLabelFromName } from '../../../../modules/tags';
-import { Badge, Button, Confirm } from '../../../../components';
+import { Badge, Button, Confirm, Icon, TextBlock } from '../../../../components';
 import MessageAttachments from '../MessageAttachments';
 import MessageRecipients from '../MessageRecipients';
 import MessagePi from '../MessagePi';
@@ -14,6 +14,7 @@ import { getAuthor } from '../../../../services/message';
 import { getAveragePIMessage, getPiClass } from '../../../../modules/pi/services/pi';
 
 import './style.scss';
+import './mail-message-details.scss';
 
 @withI18n()
 @withScrollTarget()
@@ -88,47 +89,54 @@ class MailMessage extends Component {
       noInteractions,
     } = this.props;
     const pi = getAveragePIMessage({ message });
+    const piType = getPiClass(pi);
     const author = getAuthor(message);
 
+    const infoPiClassName = {
+      's-mail-message__info--super': piType === 'super',
+      's-mail-message__info--good': piType === 'good',
+      's-mail-message__info--bad': piType === 'bad',
+      's-mail-message__info--ugly': piType === 'ugly',
+    };
+
     return (
-      <article id={`message-${message.message_id}`} ref={forwardRef} className={classnames(['s-mail-message', getPiClass(pi)])}>
-        <div className="s-mail-message__wrapper">
-          <div className="s-mail-message__details">
-            <div className="s-mail-message__details--what-who-when">
-              <i className="fa fa-envelope" />&nbsp;
-              <a className="s-mail-message__details-from" href="#">{author.label}</a>&nbsp;
-              <Moment fromNow locale={locale}>{message.date}</Moment>
+      <article id={`message-${message.message_id}`} ref={forwardRef} className="s-mail-message">
+        <div className="s-mail-message__details m-mail-message-details">
+          <TextBlock className="m-mail-message-details__author">
+            <Icon type="envelope" />
+            {' '}
+            <span className="m-mail-message-details__author-name">{author.label}</span>
+            {' '}
+            <Moment fromNow locale={locale}>{message.date}</Moment>
+          </TextBlock>
+          <TextBlock className="m-mail-message-details__recipients">
+            <Trans id="message.to">To:</Trans>
+            {' '}
+            <MessageRecipients message={message} user={user} shorten />
+          </TextBlock>
+        </div>
+        <aside className={classnames('s-mail-message__info', infoPiClassName)}>
+          <MessagePi message={message} illustrate describe />
+          <div className="s-mail-message__participants">
+            <div className="s-mail-message__participants-from">
+              <span className="direction"><Trans id="message.from">From:</Trans></span> {author.label}
             </div>
-            <div className="s-mail-message__details-to">
-              <Trans id="message.to">To:</Trans>
-              <strong>
-                <MessageRecipients message={message} user={user} shorten />
-              </strong>
+            <div className="s-mail-message__participants-to">
+              <span className="direction"><Trans id="message.to">To:</Trans></span> <MessageRecipients message={message} user={user} />
             </div>
           </div>
-          <aside className="s-mail-message__info">
-            <MessagePi message={message} illustrate describe />
-            <div className="s-mail-message__participants">
-              <div className="s-mail-message__participants-from">
-                <span className="direction"><Trans id="message.from">From:</Trans></span> {author.label}
-              </div>
-              <div className="s-mail-message__participants-to">
-                <span className="direction"><Trans id="message.to">To:</Trans></span> <MessageRecipients message={message} user={user} />
-              </div>
-            </div>
-            {this.renderTags(message)}
-          </aside>
-          <div className="s-mail-message__container">
-            <h2 className="s-mail-message__subject">{message.subject}</h2>
-            {!message.body_is_plain ? (
-              <div className="s-mail-message__content" dangerouslySetInnerHTML={{ __html: message.body }} />
-            ) : (
-              <pre className="s-mail-message__content">{message.body}</pre>
-            )
-            }
-            <div className="m-message__attachments">
-              <MessageAttachments message={message} />
-            </div>
+          {this.renderTags(message)}
+        </aside>
+        <div className="s-mail-message__container">
+          <h2 className="s-mail-message__subject">{message.subject}</h2>
+          {!message.body_is_plain ? (
+            <div className="s-mail-message__content" dangerouslySetInnerHTML={{ __html: message.body }} />
+          ) : (
+            <pre className="s-mail-message__content">{message.body}</pre>
+          )
+          }
+          <div className="m-message__attachments">
+            <MessageAttachments message={message} />
           </div>
         </div>
         {!noInteractions && (

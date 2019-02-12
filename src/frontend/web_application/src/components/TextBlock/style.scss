@@ -4,7 +4,10 @@
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+
+  &--nowrap {
+    white-space: nowrap;
+  }
 
   &--inline {
     display: inline-block;

@@ -128,11 +128,11 @@ class MailMessage extends Component {
           {this.renderTags(message)}
         </aside>
         <div className="s-mail-message__container">
-          <h2 className="s-mail-message__subject">{message.subject}</h2>
+          <h2 className="s-mail-message__subject"><TextBlock nowrap={false}>{message.subject}</TextBlock></h2>
           {!message.body_is_plain ? (
-            <div className="s-mail-message__content" dangerouslySetInnerHTML={{ __html: message.body }} />
+            <TextBlock nowrap={false} className="s-mail-message__content" dangerouslySetInnerHTML={{ __html: message.body }} />
           ) : (
-            <pre className="s-mail-message__content">{message.body}</pre>
+            <TextBlock nowrap={false}><pre className="s-mail-message__content">{message.body}</pre></TextBlock>
           )
           }
           <div className="m-message__attachments">

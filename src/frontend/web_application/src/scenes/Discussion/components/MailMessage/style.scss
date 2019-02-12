@@ -65,6 +65,11 @@
     grid-area: container;
   }
 
+  &__details,
+  &__container {
+    overflow: hidden;
+  }
+
   &__content, &__subject {
     padding: $co-component__spacing;
     border-bottom: 1px solid #f9f9f9;

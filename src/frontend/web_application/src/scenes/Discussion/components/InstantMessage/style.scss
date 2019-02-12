@@ -8,11 +8,11 @@
 
 .m-instant-message {
   $baseName: &;
-
-  display: flex;
-  flex-direction: row;
-  width: 44.5rem;
+  @include flex-grid-row($size: expand);
+  max-width: 44.5rem;
+  margin-right: initial;
   margin-bottom: 1rem;
+  margin-left: initial;
 
   &--from-user {
     flex-direction: row-reverse;
@@ -33,53 +33,38 @@
   }
 
   &__author {
-    display: flex;
-    flex: 0 0;
-    flex-basis: 3rem;
-    flex-direction: column;
-    align-content: center;
-    padding-right: 0.5rem;
-    overflow: hidden;
-    text-align: center;
-
-    .m-avatar-letter-wrapper {
-      margin-bottom: 0.25rem;
-    }
-
-    time {
-      color: #a7abad;
-      font-size: 0.625rem;
-    }
+    @include flex-grid-column(shrink);
   }
 
   &__info {
-    flex: 0 0;
-    flex-basis: 10.125rem;
-    padding: 0.5rem 1rem;
+    @include flex-grid-size;
+    padding: 0.5rem 1rem 0 1rem;
     background-color: #c5e8f6;
   }
 
-  &__participants {
-    width: auto;
-    margin-right: 0;
+  &__content {
+    @include flex-grid-size(12);
 
-    &__to, &__from {
-      display: block;
-      font-size: 0.825rem;
-    }
-
-    &__from {
-      font-size: 0.875rem;
-    }
-
-    &__to {
-      color: #a7abad;
-    }
+    padding: map_get($co-margin_, 'xsmall');
+    background-color: #b7e2f4;
   }
 
-  &__content {
-    flex-basis: 31.875rem;
-    padding: 1rem;
-    background-color: #b7e2f4;
+  @include breakpoint(medium) {
+    &__author {
+      @include flex-grid-size(shrink);
+      padding-right: 0.5rem;
+      padding-left: 0;
+    }
+
+    &__info {
+      @include flex-grid-size(6);
+      flex-basis: 10.125rem;
+      padding-bottom: 0.5rem;
+    }
+
+    &__content {
+      @include flex-grid-size;
+      padding: map_get($co-margin_, 'small');
+    }
   }
 }

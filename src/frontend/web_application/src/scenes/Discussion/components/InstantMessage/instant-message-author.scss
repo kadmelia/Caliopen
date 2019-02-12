@@ -1,0 +1,16 @@
+.m-instant-message-author {
+  display: flex;
+  flex-direction: column;
+  align-content: center;
+  overflow: hidden;
+  text-align: center;
+
+  &__avatar {
+    margin-bottom: 0.25rem;
+  }
+
+  &__time {
+    color: #a7abad;
+    font-size: 0.625rem;
+  }
+}

@@ -11,6 +11,8 @@ import { Icon } from '../../../../components';
 import MessagePi from '../MessagePi';
 
 import './style.scss';
+import './instant-message-author.scss';
+import './instant-message-participants.scss';
 
 const PROTOCOL_ICONS = {
   facebook: 'facebook',
@@ -34,12 +36,6 @@ class InstantMessage extends PureComponent {
     user: PropTypes.shape({}).isRequired,
     scrollTarget: PropTypes.shape({ forwardRef: PropTypes.func }).isRequired,
   };
-
-  getClassNames = (pi, message) => classNames(
-    'm-instant-message',
-    `${getPiClass(pi)}`,
-    { 'm-instant-message--from-user': isMessageFromUser(message, this.props.user) }
-  );
 
   getProtocolIconType = ({ protocol }) => PROTOCOL_ICONS[protocol] || 'comment';
 
@@ -78,17 +74,23 @@ class InstantMessage extends PureComponent {
     const author = getAuthor(message);
     const pi = getAveragePIMessage({ message });
 
+    const articleClassNames = classNames(
+      'm-instant-message',
+      `${getPiClass(pi)}`,
+      { 'm-instant-message--from-user': isMessageFromUser(message, this.props.user) }
+    );
+
     return (
-      <article className={this.getClassNames(pi, message)} ref={forwardRef}>
-        <header className="m-instant-message__author">
-          <AuthorAvatarLetter message={message} />
+      <article className={articleClassNames} ref={forwardRef}>
+        <header className="m-instant-message__author m-instant-message-author">
+          <AuthorAvatarLetter message={message} className="m-instant-message-author__avatar" />
           <Icon type={this.getProtocolIconType(message)} />
-          <Moment className="m-instant-message__time" format="HH:mm">{message.date}</Moment>
+          <Moment className="m-instant-message-author__time" format="HH:mm">{message.date}</Moment>
         </header>
         <aside className="m-instant-message__info">
-          <div className="m-instant-message__participants">
-            <span className="m-instant-message__participants__from">{author.label}</span>
-            <span className="m-instant-message__participants__to">{this.getRecipientsString(true)}<Icon type="caret-down" title={this.getRecipientsString(false)} /></span>
+          <div className="m-instant-message__participants m-instant-message-participants">
+            <span className="m-instant-message-participants__from">{author.label}</span>
+            <span className="m-instant-message-participants__to">{this.getRecipientsString(true)}<Icon type="caret-down" title={this.getRecipientsString(false)} /></span>
           </div>
           <MessagePi illustrate={false} describe={false} message={message} />
         </aside>

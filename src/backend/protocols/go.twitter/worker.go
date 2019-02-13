@@ -201,44 +201,50 @@ func (worker *Worker) Stop() {
 	log.Infof("worker %s stopped", worker.Id)
 }
 
-// getOrCreateWorker returns a pointer to a worker already in cache
+// getOrCreateHandler returns a pointer to a worker already in cache
 // or tries to create a new worker for the remote identity if not.
 // returns nil if get or create failed.
-func (w *Worker) getOrCreateWorker(userId, remoteId string) *AccountHandler {
-	if accountWorker, ok := w.AccountHandlers[userId+remoteId]; ok {
-		return accountWorker
+func (w *Worker) getOrCreateHandler(userId, remoteId string) *AccountHandler {
+	w.WorkersGuard.RLock()
+	if accountHandler, ok := w.AccountHandlers[userId+remoteId]; ok {
+		w.WorkersGuard.RUnlock()
+		return accountHandler
 	} else {
-		log.Infof("[getOrCreateWorker] failed to retrieve registered worker for remote %s (user %s). Trying to add one.", remoteId, userId)
+		w.WorkersGuard.RUnlock()
+		log.Infof("[getOrCreateHandler] failed to retrieve registered worker for remote %s (user %s). Trying to add one.", remoteId, userId)
 		if userId == "" || remoteId == "" {
 			return nil
 		}
-		accountWorker, err := NewAccountHandler(userId, remoteId, *w)
+		accountHandler, err := NewAccountHandler(userId, remoteId, *w)
 		if err != nil {
-			log.WithError(err).Warnf("[getOrCreateWorker] failed to create new worker for remote %s (user %s)", remoteId, userId)
+			log.WithError(err).Warnf("[getOrCreateHandler] failed to create new worker for remote %s (user %s)", remoteId, userId)
 			return nil
 		}
-		w.RegisterWorker(accountWorker)
-		go accountWorker.Start()
-		return accountWorker
+		w.RegisterAccountHandler(accountHandler)
+		go accountHandler.Start()
+		return accountHandler
 
 	}
 }
 
-func (w *Worker) RegisterWorker(accountWorker *AccountHandler) {
-	workerKey := accountWorker.userAccount.userID.String() + accountWorker.userAccount.remoteID.String()
-	// do not register same broker twice
-	if registeredWorker, ok := w.AccountHandlers[workerKey]; ok {
-		w.RemoveAccountHandler(registeredWorker)
+func (w *Worker) RegisterAccountHandler(accountHandler *AccountHandler) {
+	workerKey := accountHandler.userAccount.userID.String() + accountHandler.userAccount.remoteID.String()
+	// stop & remove handler first if it's already registered
+	w.WorkersGuard.RLock()
+	registeredHandler, ok := w.AccountHandlers[workerKey]
+	w.WorkersGuard.RUnlock()
+	if ok {
+		w.RemoveAccountHandler(registeredHandler)
 	}
 	w.WorkersGuard.Lock()
-	w.AccountHandlers[workerKey] = accountWorker
+	w.AccountHandlers[workerKey] = accountHandler
 	w.WorkersGuard.Unlock()
 }
 
-func (w *Worker) RemoveAccountHandler(accountWorker *AccountHandler) {
-	workerKey := accountWorker.userAccount.userID.String() + accountWorker.userAccount.remoteID.String()
+func (w *Worker) RemoveAccountHandler(accountHandler *AccountHandler) {
+	workerKey := accountHandler.userAccount.userID.String() + accountHandler.userAccount.remoteID.String()
 	w.WorkersGuard.Lock()
-	accountWorker.Stop()
+	accountHandler.Stop()
 	delete(w.AccountHandlers, workerKey)
 	w.WorkersGuard.Unlock()
 }

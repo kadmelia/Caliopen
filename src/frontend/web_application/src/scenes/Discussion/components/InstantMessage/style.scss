@@ -40,6 +40,7 @@
     @include flex-grid-size;
     padding: 0.5rem 1rem 0 1rem;
     background-color: #c5e8f6;
+    overflow: hidden;
   }
 
   &__content {

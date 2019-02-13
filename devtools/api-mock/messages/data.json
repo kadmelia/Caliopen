@@ -523,7 +523,7 @@
                 "51cbcbbd-3b88-44f0-963a-06740e546c33"
             ],
             "protocol": "email",
-            "label": "Agecanonix",
+            "label": "Agecanonix mais avec un nom très très très très long",
             "type": "From"
         },
         {
@@ -589,7 +589,7 @@
     "importance_level": 0,
     "privacy_features": {},
     "raw_msg_id": "bd29b3cf-7dec-423c-96f3-b1406c483984",
-    "subject": "Ils sont fous ces romains.",
+    "subject": "Ils sont fous ces romains. Malheureusement ce sujet est trop long pour s'afficher sur une ligne",
     "protocol": "email",
     "pi": { "technic": 30, "context": 10, "comportment": 1, "version": 1 },
     "pi_message": { "transport": 30, "content": 10, "social": 1 },
@@ -600,7 +600,7 @@
                 "592a4bdb-085a-4e73-9aa8-fa3b41518b4b"
             ],
             "protocol": "email",
-            "label": "Abraracourcix",
+            "label": "Abraracourcix but with a very long name",
             "type": "From"
         },
         {
@@ -650,7 +650,7 @@
         }
     ],
     "user_identities": ["aaaa-bbbb-cccc-ddd1"],
-    "body": "Rien du tout ! Je suis le chef, justement ! Nous ferons une omelette !\n",
+    "body": "Rien du tout ! Je suis le chef, justement ! Nous ferons une omelette !\n J'ai aussi un extrementabusémentlongquidépassedelécransursmartphone et voilà",
     "excerpt": "Rien du tout ! Je suis le chef, justement ! Nous fe",
     "date": "0042-09-08T14:19:00+00:00",
     "date_insert": "0042-09-08T14:24:00+00:00",

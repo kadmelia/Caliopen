@@ -7,7 +7,7 @@ import { withScrollTarget } from '../../../../modules/scroll';
 import { isMessageFromUser, getAuthor, isUserRecipient, getRecipientsExceptUser, getRecipients } from '../../../../services/message';
 import { getAveragePIMessage, getPiClass } from '../../../../modules/pi';
 import { AuthorAvatarLetter } from '../../../../modules/avatar';
-import { Icon } from '../../../../components';
+import { Icon, TextBlock } from '../../../../components';
 import MessagePi from '../MessagePi';
 
 import './style.scss';
@@ -89,12 +89,12 @@ class InstantMessage extends PureComponent {
         </header>
         <aside className="m-instant-message__info">
           <div className="m-instant-message__participants m-instant-message-participants">
-            <span className="m-instant-message-participants__from">{author.label}</span>
-            <span className="m-instant-message-participants__to">{this.getRecipientsString(true)}<Icon type="caret-down" title={this.getRecipientsString(false)} /></span>
+            <TextBlock className="m-instant-message-participants__from">{author.label}</TextBlock>
+            <TextBlock className="m-instant-message-participants__to">{this.getRecipientsString(true)}<Icon type="caret-down" title={this.getRecipientsString(false)} /></TextBlock>
           </div>
           <MessagePi illustrate={false} describe={false} message={message} />
         </aside>
-        <div className="m-instant-message__content">{message.body}</div>
+        <TextBlock className="m-instant-message__content" nowrap={false}>{message.body}</TextBlock>
       </article>
     );
   }

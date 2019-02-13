@@ -1,0 +1,17 @@
+@import '../../../../styles/common';
+@import '../../../../styles/vendor/bootstrap_foundation-sites';
+
+.m-control-compose-button {
+  &__label {
+    display: none;
+  }
+
+  @include breakpoint(medium) {
+    &__label {
+      display: inline;
+    }
+    &__icon {
+      display: none;
+    }
+  }
+}

@@ -1,8 +1,11 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import classnames from 'classnames';
 import { Trans } from '@lingui/react';
 import { withPush } from '../../../../modules/routing';
-import { Button } from '../../../../components/';
+import { Button, Icon } from '../../../../components/';
+
+import './style.scss';
 
 @withPush()
 class ComposeButton extends PureComponent {
@@ -22,8 +25,9 @@ class ComposeButton extends PureComponent {
     const { className } = this.props;
 
     return (
-      <Button shape="plain" onClick={this.handleClick} className={className} icon="pencil">
-        <Trans id="call-to-action.action.compose">Compose</Trans>
+      <Button shape="plain" onClick={this.handleClick} className={classnames(className, 'm-control-compose-button')} icon="pencil">
+        <span className="m-control-compose-button__label"><Trans id="call-to-action.action.compose">Compose</Trans></span>
+        <span className="m-control-compose-button__icon"><Icon type="plus" /></span>
       </Button>
     );
   }

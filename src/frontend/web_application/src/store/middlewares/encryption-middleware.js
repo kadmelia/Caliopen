@@ -1,27 +1,15 @@
 // Renaming REQUEST_DRAFT_SUCCESS actions for disambiguation.
 import { REQUEST_DRAFT_SUCCESS as DRAFT_REQUEST_DRAFT_SUCCESS } from '../modules/draft-message';
 import { CREATE_MESSAGE, UPDATE_MESSAGE, REQUEST_MESSAGE_SUCCESS, REQUEST_MESSAGES_SUCCESS, REQUEST_DRAFT_SUCCESS as MESSAGE_DRAFT_REQUEST_DRAFT_SUCCESS } from '../modules/message';
-import { requestPublicKeys } from '../modules/public-key';
+// eslint-disable-next-line no-unused-vars
+import { askPassphrase, needPassphrase, needPrivateKey, encryptMessage as encryptMessageStart, encryptMessageSuccess, encryptMessageFail, decryptMessage as decryptMessageStart, decryptMessageSuccess, decryptMessageFail } from '../modules/encryption';
 import { requestRemoteIdentity } from '../modules/remote-identity';
-import { getRecipients } from '../../services/message';
 import { tryCatchAxiosAction } from '../../services/api-client';
-import { getKeysForEmail, PUBLIC_KEY, PRIVATE_KEY } from '../../services/openpgp-keychain-repository';
+import { getKeysForEmail, getKeysForMessage, PUBLIC_KEY } from '../../services/openpgp-keychain-repository';
+import { getParticipantsKeys } from '../../modules/encryption/services/keyring/remoteKeys';
 import { identitiesSelector } from '../selectors/identities';
-import { decryptMessage, encryptMessage } from '../../services/encryption';
-
-export class DraftEncryptionException extends Error {}
-export class ContactNotFoundException extends DraftEncryptionException {}
-export class MissingKeyException extends DraftEncryptionException {}
-
-const intersect = (arr1, arr2) => arr1.some(value => arr2.includes(value));
-
-const selectKeys = (state, contactId) => {
-  if (state.publicKey && state.publicKey[contactId]) {
-    return state.publicKey[contactId].keys;
-  }
-
-  return null;
-};
+import { isMessageEncrypted, decryptMessage, encryptMessage } from '../../services/encryption';
+import { getAuthor } from '../../services/message';
 
 const getIdentities = (state, identitiesIds) =>
   identitiesSelector(state).filter(identity => identitiesIds.includes(identity.indentity_id));
@@ -31,109 +19,68 @@ const fetchRemoteIdentities = async (dispatch, identitiesIds) =>
   Promise.all(identitiesIds.map(identityId =>
     tryCatchAxiosAction(dispatch(requestRemoteIdentity({ identityId })))));
 
-const getAuthorAddresses = async (state, dispatch, messages) => {
-  const userIdentitiesIds = messages.reduce((acc, message) =>
-    [...acc, ...message.user_identities], []);
-  const userIdentities = getIdentities(state, userIdentitiesIds)
-    || await fetchRemoteIdentities(dispatch, userIdentitiesIds);
+export const getAuthorAddress = async (state, dispatch, message) => {
+  const author = getAuthor(message);
+  const authorAddress = author && author.address;
 
-  return getIdentitiesAddresses(userIdentities);
-};
-
-const extractContactIds = ({ participants }) => getRecipients({ participants })
-  .reduce((acc, participant) => {
-    const { contact_ids: contactIds } = participant;
-    if (contactIds && contactIds.length > 0) {
-      return [...acc, ...contactIds];
-    }
-
-    throw new ContactNotFoundException(`No contact for participant ${participant.label}, cannot encrypt`);
-  }, []);
-
-const getStoredKeys = (state, contactIds) => {
-  const missingKeysContactIds = [];
-  const cachedKeys = contactIds.reduce((acc, contactId) => {
-    const keys = selectKeys(state, contactId);
-
-    if (!(keys && keys.length > 0)) {
-      missingKeysContactIds.push(contactId);
-
-      return acc;
-    }
-
-    return [...acc, ...keys];
-  }, []);
-
-  return { keys: cachedKeys, missingKeysContactIds };
-};
-
-const fetchRemoteKeys = async (dispatch, contactIds) => Promise.all(contactIds.map(contactId =>
-  tryCatchAxiosAction(() => dispatch(requestPublicKeys({ contactId })))));
-
-const extractAddresses = ({ participants }) => getRecipients({ participants })
-  .map(participant => participant.address);
-
-const filterKeysByAddress = (keys, addresses) =>
-  keys.filter(({ emails }) => intersect(emails, addresses));
-
-const checkEachAddressHasKey = (addresses, keys) =>
-  addresses.every(address => keys.some(({ emails }) => emails.includes(address)));
-
-export const getParticipantsKeys = async (state, dispatch, { participants }) => {
-  const allContactIds = extractContactIds({ participants });
-  const allAddresses = extractAddresses({ participants });
-
-  const { keys: cachedKeys, missingKeysContactIds } = getStoredKeys(state, allContactIds);
-  const fetchedKeys = await fetchRemoteKeys(dispatch, missingKeysContactIds);
-
-  // filter out unnecessary public keys.
-  const filteredKeys = filterKeysByAddress(
-    [...cachedKeys,
-      ...(fetchedKeys.reduce((acc, key) => [...acc, ...key.pubkeys], []))],
-    allAddresses
-  );
-
-  // Check if we have all needed public keys.
-  if (!checkEachAddressHasKey(allAddresses, filteredKeys)) {
-    throw new MissingKeyException();
+  if (authorAddress) {
+    return authorAddress;
   }
 
-  return filteredKeys;
+  const { user_identities: userIdentitiesIds } = message;
+
+  if (userIdentitiesIds && userIdentitiesIds.length > 0) {
+    const userIdentities = getIdentities(state, userIdentitiesIds)
+      || await fetchRemoteIdentities(dispatch, userIdentitiesIds);
+
+    return getIdentitiesAddresses(userIdentities)[0];
+  }
+
+  return null;
 };
 
-const encryptMessageAction = async (store, action) => {
+const extractMessageIdFromAction = (action) => {
+  const messageId = action.payload.request.url.match(/messages\/(.*)$/)[1];
+
+  return messageId;
+};
+const getFullDraftFromAction = (state, action) => {
   const { data: message } = action.payload.request;
-  try {
-    const keys = await getParticipantsKeys(store.getState(), store.dispatch, message);
-    if (!message.user_identities) return action;
-    const userKeys = await getKeysForEmail(message.user_identities[0].address, PUBLIC_KEY);
+  const { draftsByInternalId } = state.draftMessage;
 
-    if (keys && keys.length > 0) {
-      // userKeys[0] : no need more than 1 key
-      const encrypted = await encryptMessage(store.dispatch)(message, [userKeys[0], ...keys]);
-
-      const encryptedAction = {
-        ...action,
-        payload: {
-          ...action.payload,
-          request: {
-            ...action.payload.request,
-            data: encrypted,
-          },
-        },
-      };
-
-      return encryptedAction;
-    }
-
-    return action;
-  } catch (e) {
-    if (!(e instanceof DraftEncryptionException)) {
-      throw e;
-    }
-
-    return action;
+  switch (action.type) {
+    case CREATE_MESSAGE:
+      return message;
+    default:
+      return Object.values(draftsByInternalId)
+        .find(draft => draft.message_id === extractMessageIdFromAction(action));
   }
+};
+
+const encryptMessageAction = async (store, dispatch, action) => {
+  const message = getFullDraftFromAction(store.getState(), action);
+  // try {
+  const keys = message.participants ?
+    await getParticipantsKeys(store.getState(), store.dispatch, message) : [];
+
+  const authorAddress = await getAuthorAddress(store.getState(), dispatch, message);
+
+  if (!authorAddress) return action;
+
+  const userKeys = await getKeysForEmail(authorAddress, PUBLIC_KEY);
+
+  if (keys && keys.length > 0 && userKeys.length > 0) {
+    dispatch(encryptMessageStart({ message }));
+    // userKeys[0] : no need more than 1 key
+    const encryptedMessage = await encryptMessage(message, [userKeys[0], ...keys]);
+
+    dispatch(encryptMessageSuccess({ message, encryptedMessage }));
+  }
+  // } catch (error) {
+  //   dispatch(encryptMessageFail({ message, error }));
+  // }
+
+  return action;
 };
 
 const extractMessagesFromAction = ({ payload }) => {
@@ -148,30 +95,55 @@ const extractMessagesFromAction = ({ payload }) => {
   return [];
 };
 
-const rebuildAction = (action, messages) => {
-  switch (action.type) {
-    case REQUEST_MESSAGE_SUCCESS:
-    case REQUEST_MESSAGES_SUCCESS:
-      return {
-        ...action,
-        payload: {
-          data: {
-            ...action.payload.data,
-            messages,
-          },
-        },
-      };
-    case DRAFT_REQUEST_DRAFT_SUCCESS:
-    case MESSAGE_DRAFT_REQUEST_DRAFT_SUCCESS:
-      return {
-        ...action,
-        payload: {
-          ...action.payload,
-          draft: messages[0],
-        },
-      };
-    default:
-      return action;
+const getKeyPassphrase = (state, fingerprint) => {
+  const { privateKeysByFingerprint } = state.encryption;
+
+  return privateKeysByFingerprint[fingerprint] &&
+    privateKeysByFingerprint[fingerprint].passphrase;
+};
+
+const decryptMessageAction = async (state, dispatch, message) => {
+  if (!isMessageEncrypted(message)) {
+    return message;
+  }
+
+  try {
+    const keys = await getKeysForMessage(message);
+
+    if (keys.length <= 0) {
+      dispatch(needPrivateKey({ message }));
+
+      return message;
+    }
+
+    let usableKey = keys.find(key => !key.isEncrypted);
+    let passphrase = null;
+
+    if (!usableKey) {
+      usableKey = keys.find(key => getKeyPassphrase(key.getFingerprint()));
+
+      if (usableKey) {
+        passphrase = getKeyPassphrase(usableKey.getFingerprint());
+      }
+    }
+
+    if (!usableKey) {
+      keys.forEach(key => dispatch(askPassphrase({ message, key })));
+      dispatch(needPassphrase({ message, fingerprints: keys.map(key => key.getFingerprint()) }));
+
+      return message;
+    }
+
+    dispatch(decryptMessageStart({ message }));
+    const decryptedMessage = await decryptMessage(message, [usableKey], passphrase);
+    dispatch(decryptMessageSuccess({ message, decryptedMessage }));
+
+    return decryptedMessage;
+  } catch (e) {
+    const { message: error } = e;
+    dispatch(decryptMessageFail({ message, error }));
+
+    return message;
   }
 };
 
@@ -182,26 +154,26 @@ const decryptMessagesAction = async (state, dispatch, action) => {
     return action;
   }
 
-  const addresses = await getAuthorAddresses(state, dispatch, messages);
-  const keys = await Promise.all(addresses.map(address =>
-    getKeysForEmail(address, PRIVATE_KEY)));
+  await Promise.all(messages.map(message => decryptMessageAction(state, dispatch, message)));
 
-  const decryptedMessages =
-    await Promise.all(messages.map(message => decryptMessage(dispatch)(message, keys)));
-
-  return rebuildAction(action, decryptedMessages);
+  return action;
 };
 
 export default store => next => async (action) => {
   switch (action.type) {
     case CREATE_MESSAGE:
     case UPDATE_MESSAGE:
-      return next(await encryptMessageAction(store, store.dispatch, action));
+      encryptMessageAction(store, store.dispatch, action);
+      break;
     case DRAFT_REQUEST_DRAFT_SUCCESS:
+    case MESSAGE_DRAFT_REQUEST_DRAFT_SUCCESS:
     case REQUEST_MESSAGE_SUCCESS:
     case REQUEST_MESSAGES_SUCCESS:
-      return next(await decryptMessagesAction(store.getState(), store.dispatch, action));
+      decryptMessagesAction(store.getState(), store.dispatch, action);
+      break;
     default:
-      return next(action);
+      break;
   }
+
+  return next(action);
 };

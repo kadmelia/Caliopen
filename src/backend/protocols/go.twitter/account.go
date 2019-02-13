@@ -64,7 +64,7 @@ func NewAccountHandler(userID, remoteID string, worker Worker) (accountHandler *
 	accountHandler.WorkerDesk = make(chan uint, 3)
 	b, e := broker.Initialize(worker.Conf.BrokerConfig, worker.Store, worker.Index, worker.NatsConn, worker.Notifier)
 	if e != nil {
-		err = fmt.Errorf("[TwitterWorker]NewAccountHandler failed to initialize a twitter broker : %s", e)
+		err = fmt.Errorf("[TwitterAccount]NewAccountHandler failed to initialize a twitter broker : %s", e)
 		return nil, err
 	}
 	accountHandler.broker = b
@@ -72,11 +72,11 @@ func NewAccountHandler(userID, remoteID string, worker Worker) (accountHandler *
 	// retrieve data from db
 	remote, err = accountHandler.broker.Store.RetrieveUserIdentity(userID, remoteID, true)
 	if err != nil {
-		log.WithError(err).Infof("[PollDM] failed to retrieve remote identity <%s> (user <%s>)", remoteID, userID)
+		log.WithError(err).Infof("[TwitterAccount]NewAccountHandler failed to retrieve remote identity <%s> (user <%s>)", remoteID, userID)
 		return
 	}
 	if remote.Credentials == nil {
-		log.WithError(err).Infof("[PollDM] failed to retrieve credentials for remote identity <%s> (user <%s>)", remoteID, userID)
+		log.WithError(err).Infof("[TwitterAccount]NewAccountHandler failed to retrieve credentials for remote identity <%s> (user <%s>)", remoteID, userID)
 		return
 	}
 	accountHandler.userAccount = &TwitterAccount{
@@ -161,9 +161,7 @@ func (worker *AccountHandler) Stop() {
 	worker.broker.ShutDown()
 	worker.broker = nil
 	// close desk
-	if _, ok := <-worker.WorkerDesk; ok {
-		close(worker.WorkerDesk)
-	}
+	close(worker.WorkerDesk)
 }
 
 // PollDM calls Twitter API endpoint to fetch DMs
@@ -209,7 +207,7 @@ func (worker *AccountHandler) PollDM() {
 					accountInfos["pollinterval"] = newInterval
 					e := worker.broker.Store.UpdateRemoteInfosMap(worker.userAccount.userID.String(), worker.userAccount.remoteID.String(), accountInfos)
 					if e != nil {
-						log.WithError(e).Warnf("[AccountHandler %s] PollDM : failed to updateRemoteInfosMap with new poll interval")
+						log.WithError(e).Warnf("[AccountHandler %s] PollDM : failed to updateRemoteInfosMap with new poll interval", worker.userAccount.userID.String()+"/"+worker.userAccount.remoteID.String())
 					}
 					order := RemoteIDNatsMessage{
 						IdentityId: worker.userAccount.remoteID.String(),
@@ -222,7 +220,7 @@ func (worker *AccountHandler) PollDM() {
 					if jerr == nil {
 						e := worker.broker.NatsConn.Publish(worker.broker.Config.NatsTopicPollerCache, jorder)
 						if e != nil {
-							log.WithError(e).Warnf("[AccountHandler %s] PollDM : failed to publish new poll interval to idpoller")
+							log.WithError(e).Warnf("[AccountHandler %s] PollDM : failed to publish new poll interval to idpoller", worker.userAccount.userID.String()+"/"+worker.userAccount.remoteID.String())
 						}
 					}
 				}

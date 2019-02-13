@@ -13,7 +13,7 @@ import (
 func initDbHandlerTest() (*DbHandler, error) {
 	handler := new(DbHandler)
 	handler.remoteProtocols = []string{"imap", "email", "twitter"}
-	handler.Store = backendstest.GetIdentitiesInterface([]*objects.UserIdentity{}, []*objects.UserIdentity{})
+	handler.Store = backendstest.GetIdentitiesBackend([]*objects.UserIdentity{}, []*objects.UserIdentity{})
 	handler.cache = make(map[string]cacheEntry)
 	handler.cacheMux = new(sync.Mutex)
 	return handler, nil

@@ -73,6 +73,7 @@ func Initialize(conf BrokerConfig, store backends.LDAStore, index backends.LDAIn
 	broker.Notifier = notifier
 	broker.Connectors = TwitterBrokerConnectors{
 		Egress: make(chan NatsCom, 5),
+		Halt:   make(chan struct{}, 1),
 	}
 	return
 }
@@ -81,11 +82,7 @@ func (broker *TwitterBroker) ShutDown() {
 	broker.NatsConn.Close()
 	broker.Store.Close()
 	broker.Index.Close()
-	if _, ok := <-broker.Connectors.Egress; ok {
-		close(broker.Connectors.Egress)
-	}
-	if _, ok := <-broker.Connectors.Halt; ok {
-		close(broker.Connectors.Halt)
-	}
+	close(broker.Connectors.Egress)
+	close(broker.Connectors.Halt)
 	log.WithField("TwitterBroker", "shutdown").Info()
 }

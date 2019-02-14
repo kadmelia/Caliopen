@@ -1,6 +1,11 @@
+// Copyleft (ɔ) 2019 The Caliopen contributors.
+// Use of this source code is governed by a GNU AFFERO GENERAL PUBLIC
+// license (AGPL) that can be found in the LICENSE file.
+
 package twitterworker
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/CaliOpen/Caliopen/src/backend/brokers/go.twitter"
 	. "github.com/CaliOpen/Caliopen/src/backend/defs/go-objects"
@@ -44,21 +49,89 @@ func initWorkerTest() (worker *Worker, natsServer *server.Server, err error) {
 
 	worker = &Worker{
 		AccountHandlers: map[string]*AccountHandler{},
-		Id:              "worker_id",
-		WorkersGuard:    new(sync.RWMutex),
-		Store:           backendstest.GetLDAStoreBackend(),
-		Index:           backendstest.GetLDAIndexBackend(),
+		Conf: WorkerConfig{
+			BrokerConfig: twitter_broker.BrokerConfig{
+				NatsQueue:            "Twitterworkers",
+				NatsTopicPoller:      "twitterJobs",
+				NatsTopicPollerCache: "idCache",
+				NatsTopicDMs:         "twitter_dm",
+			},
+		},
+		Id:           "worker_id",
+		Index:        backendstest.GetLDAIndexBackend(),
+		Store:        backendstest.GetLDAStoreBackend(),
+		WorkersGuard: new(sync.RWMutex),
 	}
 	worker.NatsConn, err = nats.Connect("nats://" + natsUrl + ":" + strconv.Itoa(natsPort))
 	if err != nil {
 		return nil, nil, fmt.Errorf("[initMqHandler] failed to init NATS connection : %s", err)
 	}
 	worker.NatsSubs = make([]*nats.Subscription, 1)
-	worker.NatsSubs[0], err = worker.NatsConn.QueueSubscribe("twitter_dm", "Twitterworkers", worker.DMmsgHandler)
+	worker.NatsSubs[0], err = worker.NatsConn.QueueSubscribe(worker.Conf.BrokerConfig.NatsTopicDMs, worker.Conf.BrokerConfig.NatsQueue, worker.DMmsgHandler)
 	if err != nil {
 		return nil, nil, err
 	}
 	return
+}
+
+func TestWorker_StartAndStop(t *testing.T) {
+	w, s, err := initWorkerTest()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	defer s.Shutdown()
+
+	// test if worker requests on Nats every second with the right payload
+	c := make(chan struct{})
+	wg := new(sync.WaitGroup)
+	wg.Add(1)
+	requestsReceived := 0
+	go w.Start(time.Second)
+	go func(wg *sync.WaitGroup, count int) {
+		_, err := w.NatsConn.Subscribe("twitterJobs", func(msg *nats.Msg) {
+			var req WorkerRequest
+			err := json.Unmarshal(msg.Data, &req)
+			if err != nil {
+				t.Errorf("unable to unmarshal worker's request : %s", err)
+				return
+			}
+			if req.Order.Order != "need_job" {
+				t.Errorf("expected to receive order 'need_job', got %s", req.Order.Order)
+			}
+			w.NatsConn.Publish(msg.Reply, []byte(`{"order":"no pending job"}`))
+			count++
+			if count == 3 {
+				wg.Done()
+				return
+			}
+		})
+		if err != nil {
+			t.Error(err)
+		}
+	}(wg, requestsReceived)
+	go func() {
+		wg.Wait()
+		close(c)
+	}()
+	select {
+	case <-c:
+		// worker sent request every second, now test auto-stop
+		w.HaltGroup = new(sync.WaitGroup)
+		w.HaltGroup.Add(1)
+		time.Sleep(500 * time.Millisecond)
+		if !w.NatsConn.IsClosed() {
+			t.Error("expected worker's nats connexion to be closed")
+		}
+		for _, sub := range w.NatsSubs {
+			if sub.IsValid() {
+				t.Errorf("expected all worker's subscription closed, got <%s> still valid", sub.Subject)
+			}
+		}
+		return
+	case <-time.After(5 * time.Second):
+		t.Error("timeout waiting for worker to send requests on nats")
+	}
 }
 
 func TestWorker_RegisterAccountHandler(t *testing.T) {

@@ -1,8 +1,12 @@
 @import '../../styles/common';
+@import '../../styles/vendor/bootstrap_foundation-sites';
 
 .m-brand {
+  $baseName: &;
+  display: inline-block;
   width: 100%;
   max-width: $co-brand-width;
+  max-height: 2rem;
 
   path {
     fill: $co-color__primary;
@@ -12,5 +16,29 @@
     path {
       fill: $co-color__primary__text--alt;
     }
+  }
+
+  &--responsive {
+    #{$baseName}__brand-name {
+      display: none;
+
+      @include breakpoint(medium) {
+        display: inline-block;
+      }
+    }
+  }
+
+  &__logo,
+  &__brand-name {
+    height: 100%;
+  }
+
+  &__brand-name {
+    margin-left: .4rem;
+  }
+
+
+  @include breakpoint(medium) {
+    width: 100%;
   }
 }

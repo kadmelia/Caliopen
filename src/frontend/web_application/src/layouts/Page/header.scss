@@ -1,9 +1,21 @@
-@import '../../styles/util/breakpoint';
+@import '../../styles/vendor/bootstrap_foundation-sites';
 
 .l-header {
   height: $co-component__height;
   background-color: #e1f5ff;
   line-height: $co-component__height;
+
+  &__container {
+    @include flex-grid-row;
+  }
+
+  &__brand-link {
+    @include flex-grid-size(expand);
+  }
+
+  &__user-menu, &__take-a-tour {
+    @include flex-grid-size(shrink);
+  }
 
   &__brand {
     display: inline-block;
@@ -14,11 +26,6 @@
     @include breakpoint(medium) {
       margin-left: 0;
     }
-  }
-
-  &__user-menu, &__take-a-tour {
-    display: inline-block;
-    float: right;
   }
 
   &__button-label {

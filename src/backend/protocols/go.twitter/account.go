@@ -72,11 +72,11 @@ func NewAccountHandler(userID, remoteID string, worker Worker) (accountHandler *
 	// retrieve data from db
 	remote, err = accountHandler.broker.Store.RetrieveUserIdentity(userID, remoteID, true)
 	if err != nil {
-		log.WithError(err).Infof("[TwitterAccount]NewAccountHandler failed to retrieve remote identity <%s> (user <%s>)", remoteID, userID)
+		log.WithError(err).Errorf("[TwitterAccount]NewAccountHandler failed to retrieve remote identity <%s> (user <%s>)", remoteID, userID)
 		return
 	}
 	if remote.Credentials == nil {
-		log.WithError(err).Infof("[TwitterAccount]NewAccountHandler failed to retrieve credentials for remote identity <%s> (user <%s>)", remoteID, userID)
+		err = fmt.Errorf("[TwitterAccount]NewAccountHandler failed to retrieve credentials for remote identity <%s> (user <%s>)", remoteID, userID)
 		return
 	}
 	accountHandler.userAccount = &TwitterAccount{
@@ -117,13 +117,11 @@ func (worker *AccountHandler) Start() {
 	go func(w *AccountHandler) {
 		for {
 			select {
-			case egress, ok := <-worker.broker.Connectors.Egress:
+			case egress, ok := <-w.broker.Connectors.Egress:
 				if !ok {
-					log.Infof("Egress chan for worker %s has been closed. Shutting-down it.", worker.userAccount.userID.String()+worker.userAccount.remoteID.String())
-					worker.WorkerDesk <- Stop
 					return
 				}
-				err := worker.SendDM(egress.Order)
+				err := w.SendDM(egress.Order)
 				if err != nil {
 					egress.Ack <- &DeliveryAck{
 						Err:      true,
@@ -135,33 +133,38 @@ func (worker *AccountHandler) Start() {
 						Response: "OK",
 					}
 				}
-			case <-worker.broker.Connectors.Halt:
-				worker.WorkerDesk <- Stop
-				return
+			case _, ok := <-w.broker.Connectors.Halt:
+				if !ok {
+					return
+				}
+				w.WorkerDesk <- Stop
 			}
 		}
 	}(worker)
 
-deskLoop:
 	for command := range worker.WorkerDesk {
 		switch command {
 		case PollDM:
 			worker.PollDM()
 		case Stop:
-			worker.Stop()
-			break deskLoop
+			worker.Stop(true)
 		default:
 			log.Warnf("worker received unknown command number %d", command)
 		}
 	}
+	if worker.broker != nil {
+		worker.Stop(false)
+	}
 }
 
-func (worker *AccountHandler) Stop() {
+func (worker *AccountHandler) Stop(closeDesk bool) {
 	// destroy broker
 	worker.broker.ShutDown()
 	worker.broker = nil
 	// close desk
-	close(worker.WorkerDesk)
+	if closeDesk {
+		close(worker.WorkerDesk)
+	}
 }
 
 // PollDM calls Twitter API endpoint to fetch DMs

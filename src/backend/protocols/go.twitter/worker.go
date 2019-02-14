@@ -249,7 +249,7 @@ func (w *Worker) RegisterAccountHandler(accountHandler *AccountHandler) {
 func (w *Worker) RemoveAccountHandler(accountHandler *AccountHandler) {
 	workerKey := accountHandler.userAccount.userID.String() + accountHandler.userAccount.remoteID.String()
 	w.WorkersGuard.Lock()
-	accountHandler.Stop()
+	accountHandler.Stop(true)
 	delete(w.AccountHandlers, workerKey)
 	w.WorkersGuard.Unlock()
 }

@@ -73,7 +73,7 @@ func Initialize(conf BrokerConfig, store backends.LDAStore, index backends.LDAIn
 	broker.Notifier = notifier
 	broker.Connectors = TwitterBrokerConnectors{
 		Egress: make(chan NatsCom, 5),
-		Halt:   make(chan struct{}, 1),
+		Halt:   make(chan struct{}),
 	}
 	return
 }

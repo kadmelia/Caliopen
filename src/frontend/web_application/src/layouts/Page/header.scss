@@ -21,6 +21,14 @@
     float: right;
   }
 
+  &__button-label {
+    display: none;
+
+    @include breakpoint(medium) {
+      display: inline;
+    }
+  }
+
   // &__notif-menu {
   //   display: inline-block;
   //   float: right;

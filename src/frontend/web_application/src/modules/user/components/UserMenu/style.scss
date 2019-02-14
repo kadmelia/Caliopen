@@ -1,7 +1,16 @@
 @import '../../../../styles/common';
+@import '../../../../styles/vendor/bootstrap_foundation-sites';
 
 .m-user-menu {
   &__user-info {
     margin-top: $co-component__spacing;
+  }
+
+  &__button-label {
+    display: none;
+
+    @include breakpoint(medium) {
+      display: inline;
+    }
   }
 }

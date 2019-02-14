@@ -35,7 +35,7 @@ class Presenter extends Component {
     return (
       <div className="m-user-menu">
         <DropdownControl toggleId="co-user-menu" icon="user" display="inline-block">
-          <span className="show-for-small-only">{user && user.name}</span>&nbsp;
+          <span className="m-user-menu__button-label">{user && user.name}</span>&nbsp;
           <Icon type={this.state.isDropdownOpen ? 'caret-up' : 'caret-down'} />
         </DropdownControl>
         <Dropdown

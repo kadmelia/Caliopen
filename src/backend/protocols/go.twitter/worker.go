@@ -161,9 +161,14 @@ func InitWorker(conf WorkerConfig, verboseLog bool, id string) (worker *Worker, 
 	return worker, nil
 }
 
-func (worker *Worker) Start() {
+func (worker *Worker) Start(throttling ...time.Duration) {
 	log.Infof("Twitter worker %s started", worker.Id)
-
+	var throttle time.Duration
+	if len(throttling) == 1 && throttling[0] != 0 {
+		throttle = throttling[0]
+	} else {
+		throttle = pollThrottling
+	}
 	// start throttled jobs polling
 	for {
 		start := time.Now()
@@ -177,17 +182,17 @@ func (worker *Worker) Start() {
 		}
 		// check for interrupt after job is finished
 		if worker.HaltGroup != nil {
-			worker.Stop()
+			worker.stop()
 			break
 		}
 		elapsed := time.Now().Sub(start)
-		if elapsed < pollThrottling {
-			time.Sleep(pollThrottling - elapsed)
+		if elapsed < throttle {
+			time.Sleep(throttle - elapsed)
 		}
 	}
 }
 
-func (worker *Worker) Stop() {
+func (worker *Worker) stop() {
 	for _, w := range worker.AccountHandlers {
 		w.WorkerDesk <- Stop
 	}

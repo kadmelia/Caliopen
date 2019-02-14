@@ -1,3 +1,7 @@
+// Copyleft (ɔ) 2019 The Caliopen contributors.
+// Use of this source code is governed by a GNU AFFERO GENERAL PUBLIC
+// license (AGPL) that can be found in the LICENSE file.
+
 package go_remoteIDs
 
 import (
@@ -56,16 +60,16 @@ func TestInitMqHandler(t *testing.T) {
 		t.Error("no mqh returned")
 		return
 	}
-	if mqh.natsConn == nil {
+	if mqh.NatsConn == nil {
 		t.Error("nats conn is nil")
 	}
-	if mqh.natsSubIdentities == nil {
+	if mqh.NatsSubIdentities == nil {
 		t.Error("nats identities subscription is nil")
 	}
-	if mqh.natsSubTwitter == nil {
+	if mqh.NatsSubTwitter == nil {
 		t.Error("nats Twitter subscription is nil")
 	}
-	if mqh.natsSubImap == nil {
+	if mqh.NatsSubImap == nil {
 		t.Error("nats imap subscription is nil")
 	}
 }

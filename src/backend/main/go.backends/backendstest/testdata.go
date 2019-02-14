@@ -133,6 +133,7 @@ var (
 				"outserver":    "",
 				"uidvalidity":  "",
 				"pollinterval": "5",
+				"twitterid":    "000000",
 			},
 			LastCheck: time.Now(),
 			Protocol:  "twitter",

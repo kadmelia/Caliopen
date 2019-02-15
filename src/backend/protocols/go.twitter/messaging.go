@@ -40,16 +40,18 @@ func (w *Worker) WorkerMsgHandler(msg *nats.Msg) {
 			w.natsReplyError(msg, errors.New("[DMmsgHandler] failed to get a worker"))
 		}
 	case "reload_worker":
-		//TODO: order to force refreshing cache data for an account
 		log.Infof("received reload_worker order for remote twitter ID %s", message.IdentityId)
+		//TODO: order to force refreshing cache data for an account
 	case "add_worker":
 		log.Infof("received add_worker order for remote twitter ID %s", message.IdentityId)
 		accountWorker := w.getOrCreateHandler(message.UserId, message.IdentityId)
 		if accountWorker == nil {
 			log.WithError(err).Warnf("[WorkerMsgHandler] failed to create new worker for remote %s (user %s)", message.IdentityId, message.UserId)
+			w.natsReplyError(msg, errors.New("[DMmsgHandler] failed to get a worker"))
 		}
 	case "remove_worker":
 		log.Infof("received remove_worker order for remote twitter ID %s", message.IdentityId)
+		// TODO
 	}
 }
 

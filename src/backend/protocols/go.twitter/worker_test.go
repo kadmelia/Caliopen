@@ -116,7 +116,7 @@ func TestWorker_StartAndStop(t *testing.T) {
 	}()
 	select {
 	case <-c:
-		// worker sent request every second, now test auto-stop
+		// worker confirmed to send request every second ; now test halting
 		w.HaltGroup = new(sync.WaitGroup)
 		w.HaltGroup.Add(1)
 		time.Sleep(500 * time.Millisecond)

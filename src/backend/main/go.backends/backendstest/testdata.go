@@ -160,6 +160,13 @@ var (
 			UserId:    UUID(uuid.FromStringOrNil(JeanThubUserId)),
 		},
 	}
+
+	messages = map[string]*Message{
+		"TODO": {
+			Body_plain: "tweet draft's body plain",
+			Is_draft:   true,
+		},
+	}
 )
 
 func LocalsCount() int {

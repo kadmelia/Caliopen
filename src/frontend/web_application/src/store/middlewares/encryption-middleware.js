@@ -122,6 +122,7 @@ const getKeyPassphrase = (state, fingerprint) => {
   const { privateKeysByFingerprint } = state.encryption;
 
   return privateKeysByFingerprint[fingerprint] &&
+    privateKeysByFingerprint[fingerprint].status === 'ok' &&
     privateKeysByFingerprint[fingerprint].passphrase;
 };
 
@@ -147,6 +148,7 @@ const decryptMessageAction = async (state, dispatch, message) => {
 
     if (usableKey) {
       passphrase = getKeyPassphrase(state, usableKey.getFingerprint());
+      await usableKey.decrypt(passphrase);
     }
   }
 
@@ -158,7 +160,7 @@ const decryptMessageAction = async (state, dispatch, message) => {
   }
 
   dispatch(decryptMessageStart({ message }));
-  const decryptedMessage = await decryptMessage(message, [usableKey], passphrase);
+  const decryptedMessage = await decryptMessage(message, [usableKey]);
   dispatch(decryptMessageSuccess({ message, decryptedMessage }));
 
   return decryptedMessage;

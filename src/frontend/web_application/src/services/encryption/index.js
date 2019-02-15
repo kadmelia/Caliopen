@@ -39,11 +39,10 @@ export const decryptMessage = async (message, keys) => {
 
   const openpgp = await import(/* webpackChunkName: "openpgp" */ 'openpgp');
 
-  const encryptedBody = openpgp.message.fromText(message.body);
-
+  const encryptedBody = await openpgp.message.readArmored(message.body);
   const options = {
     message: encryptedBody,
-    privateKeys: await prepareKeys(openpgp, keys),
+    privateKeys: keys,
     publicKeys: null,
   };
 

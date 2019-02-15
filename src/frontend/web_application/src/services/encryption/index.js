@@ -2,7 +2,7 @@ const DEFAULT_KEY_OPTIONS = { numBits: 4096 };
 
 const prepareKeys = async (openpgp, armoredKeys) => {
   const disarmoredKeys = await Promise.all(armoredKeys.map(armoredKey =>
-    openpgp.key.readArmored(armoredKey.key)));
+    openpgp.key.readArmored(armoredKey.key || armoredKey)));
 
   return disarmoredKeys.reduce((acc, disarmoredKey) =>
     [...acc, ...disarmoredKey.keys], []);

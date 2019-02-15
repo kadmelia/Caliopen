@@ -17,17 +17,19 @@ const loadKeyring = async () => {
 const getKeyIdsForMessage = async ({ body }) => {
   const openpgp = await import(/* webpackChunkName: "openpgp" */ 'openpgp');
   const encryptedMessage = await openpgp.message.readArmored(body);
+  const keyIds = encryptedMessage.getEncryptionKeyIds();
 
-  return encryptedMessage.getEncryptionKeyIds();
+  return keyIds;
 };
 
 export const getKeysForMessage = async (message) => {
   const keyring = await loadKeyring();
+  const keyIds = await getKeyIdsForMessage(message);
 
-  return (await getKeyIdsForMessage(message)).reduce((acc, keyId) => {
-    const keys = keyring.getKeysForId(keyId, true);
+  return keyIds.reduce((acc, keyId) => {
+    const keys = keyring.privateKeys.getForId(keyId.toHex(), true);
 
-    return keys ? [...acc, ...keys] : acc;
+    return keys ? [...acc, keys] : acc;
   }, []);
 };
 

@@ -39,6 +39,14 @@ const (
 	errorsCountKey    = "errorsCount"
 )
 
+// unexported vars to help override funcs in tests
+var syncRemoteWithLocal = func(f *Fetcher, order IMAPorder) error {
+	return f.SyncRemoteWithLocal(order)
+}
+var fetchRemoteToLocal = func(f *Fetcher, order IMAPorder) error {
+	return f.FetchRemoteToLocal(order)
+}
+
 // FetchSyncRemote retrieves remote identity credentials and last sync data,
 // connects to remote IMAP server to fetch new mails,
 // adds X-Fetched-Imap headers before forwarding mails to lda,

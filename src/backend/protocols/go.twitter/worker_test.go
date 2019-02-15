@@ -27,7 +27,6 @@ const (
 
 func initWorkerTest() (worker *Worker, natsServer *server.Server, err error) {
 	// starting an embedded nats server
-	fmt.Printf("starting nats server on port %d", natsPort)
 	natsServer, err = server.NewServer(&server.Options{
 		Host:     natsUrl,
 		Port:     natsPort,

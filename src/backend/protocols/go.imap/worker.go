@@ -97,7 +97,13 @@ func NewWorker(config WorkerConfig, id string) (worker *Worker, err error) {
 	return &w, nil
 }
 
-func (worker *Worker) Start() error {
+func (worker *Worker) Start(throttling ...time.Duration) error {
+	var throttle time.Duration
+	if len(throttling) == 1 && throttling[0] != 0 {
+		throttle = throttling[0]
+	} else {
+		throttle = pollThrottling
+	}
 	var err error
 	(*worker).NatsSubs[0], err = worker.NatsConn.QueueSubscribe(worker.Config.NatsTopicSender, worker.Config.NatsQueue, worker.natsMsgHandler)
 	if err != nil {
@@ -123,8 +129,8 @@ func (worker *Worker) Start() error {
 			break
 		}
 		elapsed := time.Now().Sub(start)
-		if elapsed < pollThrottling {
-			time.Sleep(pollThrottling - elapsed)
+		if elapsed < throttle {
+			time.Sleep(throttle - elapsed)
 		}
 	}
 	return nil
@@ -159,14 +165,14 @@ func (worker *Worker) natsMsgHandler(msg *nats.Msg) {
 			Store:    worker.Store,
 			Lda:      worker.Lda,
 		}
-		fetcher.SyncRemoteWithLocal(message)
+		syncRemoteWithLocal(&fetcher, message)
 	case "fullfetch": // order sent by imapctl to initiate a fetch op for an user
 		fetcher := Fetcher{
 			Hostname: worker.Config.Hostname,
 			Store:    worker.Store,
 			Lda:      worker.Lda,
 		}
-		fetcher.FetchRemoteToLocal(message)
+		fetchRemoteToLocal(&fetcher, message)
 	case "deliver": // order sent by api2 to send a draft via remote SMTP/IMAP
 		sender := Sender{
 			NatsConn:      worker.NatsConn,
@@ -176,7 +182,7 @@ func (worker *Worker) natsMsgHandler(msg *nats.Msg) {
 			Hostname:      worker.Config.Hostname,
 			ImapProviders: worker.Lda.Providers,
 		}
-		go sender.SendDraft(msg)
+		go sendDraft(&sender, msg)
 	case "test":
 		log.Info("Order « test » received")
 	}

@@ -27,6 +27,11 @@ type Sender struct {
 	Store         backends.LDAStore
 }
 
+// unexported vars to help override funcs in tests
+var sendDraft = func(s *Sender, msg *nats.Msg) {
+	s.SendDraft(msg)
+}
+
 func (s *Sender) SendDraft(msg *nats.Msg) {
 	var order BrokerOrder
 	err := json.Unmarshal(msg.Data, &order)
@@ -100,7 +105,7 @@ func (s *Sender) SendDraft(msg *nats.Msg) {
 }
 
 func (s *Sender) natsReplyError(msg *nats.Msg, err error) {
-	log.WithError(err).Warnf("IMAPworker [outbound] : error when processing incoming nats message : %s", *msg)
+	log.WithError(err).Warnf("IMAPworker [outbound] : error when processing incoming nats message : %+v", *msg)
 
 	ack := DeliveryAck{
 		Err:      true,

@@ -162,9 +162,14 @@ var (
 	}
 
 	messages = map[string]*Message{
-		"TODO": {
-			Body_plain: "tweet draft's body plain",
-			Is_draft:   true,
+		EmmaTommeUserId + "b26e5ba4-34cc-42bb-9b70-5279648134f8": {
+			Body_plain:     "email's body plain",
+			Is_draft:       false,
+			Message_id:     UUID(uuid.FromStringOrNil("b26e5ba4-34cc-42bb-9b70-5279648134f8")),
+			Raw_msg_id:     UUID(uuid.FromStringOrNil("70beae6e-d96e-456e-9d78-7c13f00f0edd")),
+			Subject:        "Sent email message with external identity",
+			User_id:        UUID(uuid.FromStringOrNil(EmmaTommeUserId)),
+			UserIdentities: []UUID{UUID(uuid.FromStringOrNil("7e4eb26d-1b70-4bb3-b556-6c54f046e88e"))},
 		},
 	}
 )

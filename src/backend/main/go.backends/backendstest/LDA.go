@@ -36,7 +36,8 @@ func (ldaStore *LDAStoreBackend) Close() {
 }
 
 func (ldaStore *LDAStoreBackend) RetrieveMessage(userId, msgId string) (msg *Message, err error) {
-	return nil, errors.New("test interface not implemented")
+	mb := GetMessagesBackend()
+	return mb.RetrieveMessage(userId, msgId)
 }
 
 func (ldaStore *LDAStoreBackend) GetUsersForLocalMailRecipients([]string) ([][]UUID, error) {

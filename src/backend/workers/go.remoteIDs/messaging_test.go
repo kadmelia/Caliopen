@@ -7,21 +7,25 @@ package go_remoteIDs
 import (
 	"fmt"
 	"github.com/nats-io/gnatsd/server"
+	"github.com/phayes/freeport"
 	"strconv"
 	"testing"
 	"time"
 )
 
 const (
-	natsUrl  = "0.0.0.0"
-	natsPort = 8444
+	natsUrl = "0.0.0.0"
 )
 
 func initMqHandlerTest() (*MqHandler, error) {
 	// starting an embedded nats server
+	port, err := freeport.GetFreePort()
+	if err != nil {
+		return nil, err
+	}
 	s, err := server.NewServer(&server.Options{
 		Host:     natsUrl,
-		Port:     natsPort,
+		Port:     port,
 		HTTPPort: -1,
 		Cluster:  server.ClusterOpts{Port: -1},
 		NoLog:    true,
@@ -39,7 +43,7 @@ func initMqHandlerTest() (*MqHandler, error) {
 	}
 
 	poller.Config = PollerConfig{
-		NatsUrl: "nats://" + natsUrl + ":" + strconv.Itoa(natsPort),
+		NatsUrl: "nats://" + natsUrl + ":" + strconv.Itoa(port),
 		NatsTopics: map[string]string{
 			"id_cache": "idCache",
 			"imap":     "imapJobs",

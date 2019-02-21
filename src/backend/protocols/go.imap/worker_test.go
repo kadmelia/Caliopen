@@ -12,6 +12,7 @@ import (
 	"github.com/CaliOpen/Caliopen/src/backend/main/go.backends/backendstest"
 	"github.com/nats-io/gnatsd/server"
 	"github.com/nats-io/go-nats"
+	"github.com/phayes/freeport"
 	"strconv"
 	"sync"
 	"testing"
@@ -19,12 +20,7 @@ import (
 )
 
 const (
-	natsUrl  = "0.0.0.0"
-	natsPort = 61000
-)
-
-var (
-	fakeSync = (*Fetcher).SyncRemoteWithLocal
+	natsUrl = "0.0.0.0"
 )
 
 func newWorkerTest() (worker *Worker, natsServer *server.Server, err error) {
@@ -40,9 +36,13 @@ func newWorkerTest() (worker *Worker, natsServer *server.Server, err error) {
 	}
 
 	// starting an embedded nats server
+	port, err := freeport.GetFreePort()
+	if err != nil {
+		return nil, nil, err
+	}
 	natsServer, err = server.NewServer(&server.Options{
 		Host:     natsUrl,
-		Port:     natsPort,
+		Port:     port,
 		HTTPPort: -1,
 		Cluster:  server.ClusterOpts{Port: -1},
 		NoLog:    true,
@@ -59,7 +59,7 @@ func newWorkerTest() (worker *Worker, natsServer *server.Server, err error) {
 		panic("Unable to start NATS Server in Go Routine")
 	}
 
-	worker.NatsConn, err = nats.Connect("nats://" + natsUrl + ":" + strconv.Itoa(natsPort))
+	worker.NatsConn, err = nats.Connect("nats://" + natsUrl + ":" + strconv.Itoa(port))
 
 	connectors := email_broker.EmailBrokerConnectors{
 		Ingress: make(chan *email_broker.SmtpEmail),
@@ -151,10 +151,10 @@ func TestWorker_natsMsgHandler(t *testing.T) {
 	}
 	defer s.Shutdown()
 
-	syncRemoteCalled, fetchRemoteCalled := false, false
+	c := make(chan struct{})
 	// overriding funcs that should be called within natsMsgHandler but are out of this test scope
 	syncRemoteWithLocal = func(f *Fetcher, order IMAPorder) error {
-		syncRemoteCalled = true
+		defer close(c)
 		if f == nil {
 			t.Error("expected a Fetcher within syncRemoteWithLocal call, got nil")
 			return nil
@@ -168,7 +168,7 @@ func TestWorker_natsMsgHandler(t *testing.T) {
 		return nil
 	}
 	fetchRemoteToLocal = func(f *Fetcher, order IMAPorder) error {
-		fetchRemoteCalled = true
+		defer close(c)
 		if f == nil {
 			t.Error("expected a Fetcher within fetchRemoteToLocal call, got nil")
 			return nil
@@ -181,7 +181,6 @@ func TestWorker_natsMsgHandler(t *testing.T) {
 		}
 		return nil
 	}
-	c := make(chan struct{})
 	sendDraft = func(s *Sender, msg *nats.Msg) {
 		defer close(c)
 		if s == nil {
@@ -210,10 +209,13 @@ func TestWorker_natsMsgHandler(t *testing.T) {
 		Data:    data,
 	}
 	w.natsMsgHandler(&natsPayload)
-	if !syncRemoteCalled {
+	select {
+	case <-c:
+	case <-time.After(10 * time.Millisecond):
 		t.Error("expected 'sync' order to trigger a call to syncRemoteWithLocal func, but func was not called")
 	}
 	// 'fullfetch'
+	c = make(chan struct{})
 	order.Order = "fullfetch"
 	data, _ = json.Marshal(order)
 	natsPayload = nats.Msg{
@@ -222,10 +224,13 @@ func TestWorker_natsMsgHandler(t *testing.T) {
 		Data:    data,
 	}
 	w.natsMsgHandler(&natsPayload)
-	if !fetchRemoteCalled {
+	select {
+	case <-c:
+	case <-time.After(10 * time.Millisecond):
 		t.Error("expected 'fullfetch' order to trigger a call to fetchRemoteToLocal func, but func was not called")
 	}
 	// 'deliver'
+	c = make(chan struct{})
 	order.Order = "deliver"
 	data, _ = json.Marshal(order)
 	natsPayload = nats.Msg{

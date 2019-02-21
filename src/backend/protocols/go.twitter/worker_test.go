@@ -12,6 +12,7 @@ import (
 	"github.com/CaliOpen/Caliopen/src/backend/main/go.backends/backendstest"
 	"github.com/nats-io/gnatsd/server"
 	"github.com/nats-io/go-nats"
+	"github.com/phayes/freeport"
 	"github.com/satori/go.uuid"
 	"math/rand"
 	"strconv"
@@ -21,15 +22,18 @@ import (
 )
 
 const (
-	natsUrl  = "0.0.0.0"
-	natsPort = 61000
+	natsUrl = "0.0.0.0"
 )
 
 func initWorkerTest() (worker *Worker, natsServer *server.Server, err error) {
 	// starting an embedded nats server
+	port, err := freeport.GetFreePort()
+	if err != nil {
+		return nil, nil, err
+	}
 	natsServer, err = server.NewServer(&server.Options{
 		Host:     natsUrl,
-		Port:     natsPort,
+		Port:     port,
 		HTTPPort: -1,
 		Cluster:  server.ClusterOpts{Port: -1},
 		NoLog:    true,
@@ -61,7 +65,7 @@ func initWorkerTest() (worker *Worker, natsServer *server.Server, err error) {
 		Store:        backendstest.GetLDAStoreBackend(),
 		WorkersGuard: new(sync.RWMutex),
 	}
-	worker.NatsConn, err = nats.Connect("nats://" + natsUrl + ":" + strconv.Itoa(natsPort))
+	worker.NatsConn, err = nats.Connect("nats://" + natsUrl + ":" + strconv.Itoa(port))
 	if err != nil {
 		return nil, nil, fmt.Errorf("[initMqHandler] failed to init NATS connection : %s", err)
 	}

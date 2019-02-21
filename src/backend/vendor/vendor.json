@@ -835,6 +835,12 @@
 			"revisionTime": "2017-05-04T04:03:14Z"
 		},
 		{
+			"checksumSHA1": "sBALTWsq3cAos/E5uvVQ2ixrNZI=",
+			"path": "github.com/phayes/freeport",
+			"revision": "95f893ade6f232a5f1511d61735d89b1ae2df543",
+			"revisionTime": "2018-08-30T03:14:19Z"
+		},
+		{
 			"checksumSHA1": "xCv4GBFyw07vZkVtKF/XrUnkHRk=",
 			"path": "github.com/pkg/errors",
 			"revision": "e881fd58d78e04cf6d0de1217f8707c8cc2249bc",

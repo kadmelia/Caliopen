@@ -8,7 +8,7 @@ Which tests are launched depends on the files changed (services modified).
 
 ### Pull Requests
 
-When a pull request is created or a new commit pushed to an already existing PR, Drone captures the event `pull_request`. Depending on the files changed, Drone will launch **lint check, unit tests and functional tests** in the case of the frontend (more info below), or unit tests for python. Go and Python tests are prepared to be launched based on the modifications made to the dependencies of each service, this means a service is only tested if any of its dependencies is modified. There are currently no GO tests and Python tests are global and not tied to a service, so the pipeline currently only tests python in case of a modification to the backend. Future improvements include individual service testing and proper unit tests for both go and python.
+When a pull request is created or a new commit pushed to an already existing PR, Drone captures the event `pull_request`. Depending on the files changed, Drone will launch **lint check, unit tests and functional tests** in the case of the frontend (more info below), or unit tests for python. Go and Python tests are prepared to be launched based on the modifications made to the dependencies of each service, this means a service is only tested if any of its dependencies is modified. Python tests are global and not tied to a service, so the pipeline currently only tests python in case of a modification to the backend. Future improvements include individual service testing and proper unit tests for both go and python.
 
 Those tests are made using the [merge and checkout strategy][2] so the tests will show the results as if the branch was be merged.
 

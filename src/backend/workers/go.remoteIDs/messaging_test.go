@@ -5,6 +5,7 @@
 package go_remoteIDs
 
 import (
+	"errors"
 	"fmt"
 	"github.com/nats-io/gnatsd/server"
 	"github.com/phayes/freeport"
@@ -39,7 +40,7 @@ func initMqHandlerTest() (*MqHandler, error) {
 	go s.Start()
 	// Wait for accept loop(s) to be started
 	if !s.ReadyForConnections(10 * time.Second) {
-		panic("Unable to start NATS Server in Go Routine")
+		return nil, errors.New("Unable to start NATS Server in Go Routine")
 	}
 
 	poller.Config = PollerConfig{

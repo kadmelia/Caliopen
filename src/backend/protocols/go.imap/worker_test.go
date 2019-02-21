@@ -26,6 +26,9 @@ const (
 func newWorkerTest() (worker *Worker, natsServer *server.Server, err error) {
 	worker = &Worker{
 		Config: WorkerConfig{
+			LDAConfig: LDAConfig{
+				OutTopic: "outboundIMAP",
+			},
 			NatsQueue:            "IMAPworkers",
 			NatsTopicPoller:      "imapJobs",
 			NatsTopicPollerCache: "idCache",

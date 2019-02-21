@@ -162,25 +162,25 @@ func (worker *Worker) natsMsgHandler(msg *nats.Msg) {
 	case "sync": // simplest order to initiate a sync op for a stored remote identity
 		fetcher := Fetcher{
 			Hostname: worker.Config.Hostname,
-			Store:    worker.Store,
 			Lda:      worker.Lda,
+			Store:    worker.Store,
 		}
-		syncRemoteWithLocal(&fetcher, message)
+		go syncRemoteWithLocal(&fetcher, message)
 	case "fullfetch": // order sent by imapctl to initiate a fetch op for an user
 		fetcher := Fetcher{
 			Hostname: worker.Config.Hostname,
-			Store:    worker.Store,
 			Lda:      worker.Lda,
+			Store:    worker.Store,
 		}
-		fetchRemoteToLocal(&fetcher, message)
+		go fetchRemoteToLocal(&fetcher, message)
 	case "deliver": // order sent by api2 to send a draft via remote SMTP/IMAP
 		sender := Sender{
+			Hostname:      worker.Config.Hostname,
+			ImapProviders: worker.Lda.Providers,
 			NatsConn:      worker.NatsConn,
 			NatsMessage:   msg,
 			OutSMTPtopic:  worker.Config.LDAConfig.OutTopic,
 			Store:         worker.Store,
-			Hostname:      worker.Config.Hostname,
-			ImapProviders: worker.Lda.Providers,
 		}
 		go sendDraft(&sender, msg)
 	case "test":

@@ -1,6 +1,6 @@
 // Renaming REQUEST_DRAFT_SUCCESS actions for disambiguation.
-import { REQUEST_DRAFT_SUCCESS as DRAFT_REQUEST_DRAFT_SUCCESS } from '../modules/draft-message';
-import { CREATE_MESSAGE, UPDATE_MESSAGE, REQUEST_MESSAGE_SUCCESS, REQUEST_MESSAGES_SUCCESS, REQUEST_DRAFT_SUCCESS as MESSAGE_DRAFT_REQUEST_DRAFT_SUCCESS } from '../modules/message';
+import { decryptDraftSuccess, REQUEST_DRAFT_SUCCESS as DRAFT_REQUEST_DRAFT_SUCCESS } from '../modules/draft-message';
+import { CREATE_MESSAGE, UPDATE_MESSAGE, FETCH_MESSAGES_SUCCESS, REQUEST_MESSAGE_SUCCESS, REQUEST_MESSAGES_SUCCESS, REQUEST_DRAFT_SUCCESS as MESSAGE_REQUEST_DRAFT_SUCCESS } from '../modules/message';
 // eslint-disable-next-line no-unused-vars
 import { askPassphrase, needPassphrase, needPrivateKey, encryptMessage as encryptMessageStart, encryptMessageSuccess, encryptMessageFail, decryptMessage as decryptMessageStart, decryptMessageSuccess, decryptMessageFail, SET_PASSPHRASE } from '../modules/encryption';
 import { requestRemoteIdentity } from '../modules/remote-identity';
@@ -61,47 +61,46 @@ const getFullDraftFromAction = (state, action) => {
 const encryptMessageAction = async (store, dispatch, action) => {
   const message = getFullDraftFromAction(store.getState(), action);
 
-  try {
-    const keys = message.participants ?
-      await getParticipantsKeys(store.getState(), store.dispatch, message) : [];
+  // try {
+  const keys = await getParticipantsKeys(store.getState(), store.dispatch, message);
 
-    const authorAddress = await getAuthorAddress(store.getState(), dispatch, message);
+  const authorAddress = await getAuthorAddress(store.getState(), dispatch, message);
 
-    if (!authorAddress) return action;
+  if (!authorAddress) return action;
 
-    const userKeys = await getKeysForEmail(authorAddress, PUBLIC_KEY);
+  const userKeys = await getKeysForEmail(authorAddress, PUBLIC_KEY);
 
-    if (keys && keys.length > 0 && userKeys.length > 0) {
-      dispatch(encryptMessageStart({ message }));
-      // userKeys[0] : no need more than 1 key
-      const encryptedMessage = await encryptMessage(message, [userKeys[0].armor(), ...keys]);
+  if (keys && keys.length > 0 && userKeys.length > 0) {
+    dispatch(encryptMessageStart({ message }));
+    // userKeys[0] : no need more than 1 key
+    const encryptedMessage = await encryptMessage(message, [userKeys[0].armor(), ...keys]);
 
-      dispatch(encryptMessageSuccess({ message, encryptedMessage }));
+    dispatch(encryptMessageSuccess({ message, encryptedMessage }));
 
-      return {
-        ...action,
-        payload: {
-          ...action.payload,
-          request: {
-            ...action.payload.request,
-            data: {
-              ...action.payload.request.data,
-              current_state: action.payload.request.data.current_state ? {
-                ...action.payload.request.data.current_state,
-                body: action.payload.request.data.current_state.body || message.body,
-                privacy_features: action.payload.request.data.current_state.privacy_features
-                  || message.privacy_features,
-              } : undefined,
-              body: encryptedMessage.body,
-              privacy_features: encryptedMessage.privacy_features,
-            },
+    return {
+      ...action,
+      payload: {
+        ...action.payload,
+        request: {
+          ...action.payload.request,
+          data: {
+            ...action.payload.request.data,
+            current_state: action.payload.request.data.current_state ? {
+              ...action.payload.request.data.current_state,
+              body: action.payload.request.data.current_state.body || message.body,
+              privacy_features: action.payload.request.data.current_state.privacy_features
+              || message.privacy_features,
+            } : undefined,
+            body: encryptedMessage.body,
+            privacy_features: encryptedMessage.privacy_features,
           },
         },
-      };
-    }
-  } catch (error) {
-    dispatch(encryptMessageFail({ message, error }));
+      },
+    };
   }
+  // } catch (error) {
+  // dispatch(encryptMessageFail({ message, error }));
+  // }
 
   return action;
 };
@@ -172,16 +171,23 @@ const decryptMessageAction = async (state, dispatch, message) => {
   // }
 };
 
-const decryptMessagesAction = async (state, dispatch, action) => {
-  const messages = extractMessagesFromAction(action);
+const decryptMessagesAction = async (state, dispatch, messages) => {
+  if (messages.length <= 0) return messages;
 
-  if (messages.length <= 0) {
-    return action;
-  }
+  return Promise.all(messages.map(message => decryptMessageAction(state, dispatch, message)));
+};
 
-  await Promise.all(messages.map(message => decryptMessageAction(state, dispatch, message)));
+const findMessagesEncryptedWithKey = (state, fingerprint) => {
+  const { messageEncryptionStatusById } = state.encryption;
 
-  return action;
+  return Object.values(messageEncryptionStatusById)
+    .filter(messageEntry => fingerprint === messageEntry.keyFingerprint);
+};
+
+const setPassphraseAction = (state, dispatch, action) => {
+  const messages = findMessagesEncryptedWithKey(state, action.payload.fingerprint);
+
+  decryptMessagesAction(state, dispatch, messages);
 };
 
 export default store => next => async (action) => {
@@ -189,15 +195,22 @@ export default store => next => async (action) => {
     case CREATE_MESSAGE:
     case UPDATE_MESSAGE:
       return next(await encryptMessageAction(store, store.dispatch, action));
+    case MESSAGE_REQUEST_DRAFT_SUCCESS:
     case DRAFT_REQUEST_DRAFT_SUCCESS:
-    case MESSAGE_DRAFT_REQUEST_DRAFT_SUCCESS:
+      decryptMessageAction(store.getState(), store.dispatch, extractMessagesFromAction(action)[0])
+        .then(draft =>
+          store.dispatch(decryptDraftSuccess({ internalId: action.payload.internalId, draft })));
+
+      return next(action);
     case REQUEST_MESSAGE_SUCCESS:
     case REQUEST_MESSAGES_SUCCESS:
-      decryptMessagesAction(store.getState(), store.dispatch, action);
-      break;
+    case FETCH_MESSAGES_SUCCESS:
+      decryptMessagesAction(store.getState(), store.dispatch, extractMessagesFromAction(action));
+
+      return next(action);
     case SET_PASSPHRASE:
-      // test key
-      // find message with this key
+      store.dispatch(action);
+      setPassphraseAction(store.getState(), store.dispatch, action);
       // decrypt message
       // init setTimeout to reset key
       // forward passphrase to redux.

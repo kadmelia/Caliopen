@@ -9,6 +9,7 @@ export const REQUEST_DRAFT_SUCCESS = 'co/draft-message/REQUEST_DRAFT_SUCCESS';
 export const DELETE_DRAFT = 'co/draft-message/DELETE_DRAFT';
 export const DELETE_DRAFT_SUCCESS = 'co/draft-message/DELETE_DRAFT_SUCCESS';
 export const SET_RECIPIENT_SEARCH_TERMS = 'co/draft-message/SET_RECIPIENT_SEARCH_TERMS';
+export const DECRYPT_DRAFT_SUCCESS = 'co/draft-message/DECRYPT_DRAFT_SUCCESS';
 
 export function editDraft({ internalId, draft, message }) {
   return {
@@ -87,11 +88,19 @@ export function setRecipientSearchTerms({ internalId, searchTerms }) {
   };
 }
 
+export function decryptDraftSuccess({ internalId, draft }) {
+  return {
+    type: DECRYPT_DRAFT_SUCCESS,
+    payload: { internalId, draft },
+  };
+}
+
 function draftReducer(state = {}, action) {
   switch (action.type) {
     case CREATE_DRAFT:
     case EDIT_DRAFT:
     case REQUEST_DRAFT_SUCCESS:
+    case DECRYPT_DRAFT_SUCCESS:
       return {
         ...state,
         ...action.payload.draft,
@@ -109,6 +118,7 @@ function dratfsByInternalIdReducer(state, action) {
     case SYNC_DRAFT:
     case EDIT_DRAFT:
     case REQUEST_DRAFT_SUCCESS:
+    case DECRYPT_DRAFT_SUCCESS:
       return {
         ...state,
         [action.payload.internalId]: draftReducer(state[action.payload.internalId], action),
@@ -191,6 +201,7 @@ export default function reducer(state = initialState, action) {
         draftActivityByInternalId:
           draftActivityByInternalIdReducer(state.draftActivityByInternalId, action),
       };
+    case DECRYPT_DRAFT_SUCCESS:
     case REQUEST_DRAFT_SUCCESS:
       return {
         ...state,

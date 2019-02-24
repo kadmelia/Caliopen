@@ -152,7 +152,9 @@ export default function reducer(state = initialState, action) {
           ...state.messageEncryptionStatusById,
           [action.payload.message.message_id]: {
             status: 'need_passphrase',
-            keyFigerprint: action.payload.fingerprints,
+            keyFingerprint: action.payload.fingerprints,
+            decryptedMessage: null,
+            encryptedMessage: action.payload.message,
           },
         },
       };
@@ -163,6 +165,8 @@ export default function reducer(state = initialState, action) {
           ...state.messageEncryptionStatusById,
           [action.payload.message.message_id]: {
             status: 'need_privatekey',
+            decryptedMessage: null,
+            encryptedMessage: action.payload.message,
           },
         },
       };
@@ -174,6 +178,7 @@ export default function reducer(state = initialState, action) {
           [action.payload.message.message_id]: {
             status: 'encrypting',
             encryptedMessage: null,
+            decryptedMessage: action.payload.message,
           },
         },
       };
@@ -185,6 +190,7 @@ export default function reducer(state = initialState, action) {
           [action.payload.message.message_id]: {
             status: 'encrypted',
             encryptedMessage: action.payload.encryptedMessage,
+            decryptedMessage: action.payload.message,
           },
         },
       };
@@ -194,7 +200,10 @@ export default function reducer(state = initialState, action) {
         messageEncryptionStatusById: {
           ...state.messageEncryptionStatusById,
           [action.payload.message.message_id]: {
+            status: 'error',
             error: action.payload.error,
+            encryptedMessage: null,
+            decryptedMessage: action.payload.message,
           },
         },
       };
@@ -206,7 +215,8 @@ export default function reducer(state = initialState, action) {
           [action.payload.message.message_id]: {
             error: undefined,
             status: 'decrypting',
-            encryptMessage: null,
+            encryptedMessage: action.payload.message,
+            decryptedMessage: null,
           },
         },
       };
@@ -218,7 +228,8 @@ export default function reducer(state = initialState, action) {
           [action.payload.message.message_id]: {
             error: undefined,
             status: 'decrypted',
-            encryptMessage: action.payload.decryptedMessage,
+            encryptedMessage: action.payload.message,
+            decryptedMessage: action.payload.decryptedMessage,
           },
         },
       };
@@ -231,6 +242,7 @@ export default function reducer(state = initialState, action) {
             error: action.payload.error,
             status: 'error',
             encryptMessage: action.payload.message,
+            decryptedMessage: null,
           },
         },
       };

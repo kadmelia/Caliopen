@@ -37,7 +37,7 @@ export const isMessageFromUser = (message, user) => {
 export const isUserRecipient = (message, user) => getRecipients(message)
   .some(recipient => isParticipantUser(recipient, user));
 
-export const getParticipantsContactIds = ({ participants }) => getRecipients({ participants })
+export const getParticipantsContactIds = ({ participants }) => participants
   .reduce((acc, participant) => {
     const { contact_ids: contactIds } = participant;
     if (contactIds && contactIds.length > 0) {
@@ -47,6 +47,6 @@ export const getParticipantsContactIds = ({ participants }) => getRecipients({ p
     throw new Error(`No contact for participant ${participant.label}, cannot encrypt`);
   }, []);
 
-export const getParticipantsAddresses = ({ participants }) => getRecipients({ participants })
+export const getParticipantsAddresses = ({ participants }) => participants
   .map(participant => participant.address);
 

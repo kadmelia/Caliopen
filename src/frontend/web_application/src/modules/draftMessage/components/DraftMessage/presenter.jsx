@@ -51,6 +51,11 @@ class DraftMessage extends Component {
     isFetching: PropTypes.bool,
     // required in redux selector and withDraftMessage …
     hasDiscussion: PropTypes.bool.isRequired,
+    isEncrypted: PropTypes.bool,
+    encryptionStatus: PropTypes.string,
+    draftEncryption: PropTypes.shape({
+      status: PropTypes.string.isRequired,
+    }),
   };
   static defaultProps = {
     className: undefined,
@@ -65,16 +70,23 @@ class DraftMessage extends Component {
     onSent: () => {},
     onDeleteMessageSuccessfull: () => {},
     isFetching: true,
+    isEncrypted: false,
+    draftEncryption: undefined,
+    encryptionStatus: undefined,
   };
 
   static genererateStateFromProps(props, prevState) {
     const {
       draftMessage, isReply, availableIdentities, isFetching,
+      isEncrypted, draftEncryption, encryptionStatus,
     } = props;
 
     if (!draftMessage) {
       return prevState;
     }
+
+    const { body } = (isEncrypted && encryptionStatus === 'decrypted')
+      ? draftEncryption.decryptedMessage : draftMessage;
 
     const recipients = getRecipients(draftMessage);
     const identityId = (draftMessage.user_identities && draftMessage.user_identities[0]) || '';
@@ -82,11 +94,11 @@ class DraftMessage extends Component {
     const currIdentity = availableIdentities.find(identity => identity.identity_id === identityId);
 
     return {
-      initialized: !isFetching,
+      initialized: !isFetching && encryptionStatus !== 'decrypting',
       advancedForm: !isReply || !currIdentity,
       draftMessage: {
         ...prevState.draftMessage,
-        body: draftMessage.body,
+        body,
         subject: draftMessage.subject,
         identityId,
         recipients,
@@ -119,14 +131,8 @@ class DraftMessage extends Component {
   state = this.constructor.genererateStateFromProps(this.props, this.constructor.initialState);
 
   componentDidUpdate(prevProps) {
-    const propNames = ['draftMessage', 'isReply', 'availableIdentities', 'isFetching'];
-    const hasChanged = propNames.reduce((acc, propName) => {
-      if (acc) {
-        return true;
-      }
-
-      return this.props[propName] !== prevProps[propName];
-    }, false);
+    const propNames = ['draftMessage', 'isReply', 'availableIdentities', 'isFetching', 'encryptionStatus'];
+    const hasChanged = propNames.some(propName => this.props[propName] !== prevProps[propName]);
 
     if (!this.state.initialized && hasChanged) {
       // eslint-disable-next-line react/no-did-update-set-state

@@ -1,7 +1,8 @@
 import { requestPublicKeys } from '../../../../store/modules/public-key';
 import { tryCatchAxiosAction } from '../../../../services/api-client';
 import { selectKeys } from '../../selectors/publicKey';
-import { getParticipantsAddresses, getParticipantsContactIds } from '../../../../services/message';
+import { getParticipantsAddresses, getParticipantsContactIds, getRecipients } from '../../../../services/message';
+import { requestParticipantsForDiscussionId } from '../../../../modules/discussion';
 
 const intersect = (arr1, arr2) => arr1.some(value => arr2.includes(value));
 
@@ -31,9 +32,16 @@ const filterKeysByAddress = (keys, addresses) =>
 const checkEachAddressHasKey = (addresses, keys) =>
   addresses.every(address => keys.some(({ emails }) => emails.includes(address)));
 
-export const getParticipantsKeys = async (state, dispatch, { participants }) => {
-  const allContactIds = getParticipantsContactIds({ participants });
-  const allAddresses = getParticipantsAddresses({ participants });
+export const getParticipantsKeys = async (state, dispatch,
+  { participants, discussion_id: discussionId }) => {
+  const actualParticipants = getRecipients({ participants }) ||
+      getRecipients({
+        participants:
+          await requestParticipantsForDiscussionId({ discussionId })(dispatch, () => state),
+      });
+
+  const allContactIds = getParticipantsContactIds({ participants: actualParticipants });
+  const allAddresses = getParticipantsAddresses({ participants: actualParticipants });
 
   const { keys: cachedKeys, missingKeysContactIds } = getStoredKeys(state, allContactIds);
   const fetchedKeys = await fetchRemoteKeys(dispatch, missingKeysContactIds);

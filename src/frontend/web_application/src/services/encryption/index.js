@@ -47,7 +47,7 @@ export const decryptMessage = async (message, keys) => {
   };
 
   const { data: body } = await openpgp.decrypt(options);
-  const decryptedMessage = { ...message, body, privacy_features: undefined };
+  const decryptedMessage = { ...message, body };
 
   return decryptedMessage;
 };

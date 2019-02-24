@@ -15,7 +15,8 @@ import { userSelector } from '../../../../modules/user';
 import { getLastMessage } from '../../../../services/message';
 import { withDraftMessage } from './withDraftMessage';
 import { filterIdentities } from '../../services/filterIdentities';
-// import { encryptDraft } from '../../services/encryption';
+import { isMessageEncrypted } from '../../../../services/encryption';
+import { messageEncryptionStatusSelector } from '../../../../modules/encryption/selectors/message';
 import Presenter from './presenter';
 
 const internalIdSelector = (state, ownProps) => ownProps.internalId;
@@ -55,11 +56,12 @@ const availableIdentitiesSelector = createSelector([
 const mapStateToProps = createSelector([
   draftSelector, messageCollectionStateSelector, internalIdSelector, availableIdentitiesSelector,
   parentMessageSelector, sentMessagesSelector, identityStateSelector,
+  messageEncryptionStatusSelector,
 ], (
   {
     draftMessage, isRequestingDraft, isDeletingDraft, original,
   }, { messages }, internalId, availableIdentities, parentMessage, sentMessages,
-  { isFetching: isIdentitiesFetching }
+  { isFetching: isIdentitiesFetching }, messageEncryptionStatus,
 ) => {
   const lastMessage = getLastMessage(sentMessages);
   const canEditRecipients = messages.some(message => !message.is_draft) === false;
@@ -67,6 +69,7 @@ const mapStateToProps = createSelector([
   return {
     key: draftMessage && draftMessage.message_id,
     draftMessage,
+    isEncrypted: draftMessage && isMessageEncrypted(draftMessage),
     isFetching: isRequestingDraft || isIdentitiesFetching,
     isDeletingDraft,
     canEditRecipients,
@@ -75,6 +78,9 @@ const mapStateToProps = createSelector([
     internalId,
     availableIdentities,
     isReply: parentMessage && true,
+    draftEncryption: draftMessage && messageEncryptionStatus[draftMessage.message_id],
+    encryptionStatus: draftMessage && messageEncryptionStatus[draftMessage.message_id]
+      && messageEncryptionStatus[draftMessage.message_id].status,
   };
 });
 
